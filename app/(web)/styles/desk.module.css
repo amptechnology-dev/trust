@@ -1,0 +1,572 @@
+.wrapper {
+  --purple: #cdbdde;
+  --purple-deep: #57416c;
+  --purple-soft: #f3eff6;
+  --ink: #1a1a1f;
+  --border: #ddd4e5;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  position: relative;
+  padding: 36px 20px 44px;
+  background:
+    radial-gradient(900px 300px at 100% 0%, rgba(103, 77, 129, 0.07), transparent 70%),
+    linear-gradient(180deg, #faf9fb 0%, #f4f2f7 100%);
+  overflow: hidden;
+}
+
+.grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 36px;
+}
+
+.column { min-width: 0; }
+
+/* ---------- Headings ---------- */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.headTitle {
+  position: relative;
+  padding-left: 10px;
+  border-left: 3px solid var(--purple);
+  line-height: 1.05;
+  flex-shrink: 0;
+}
+
+.kicker {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #62477b;
+}
+
+.headTitle h2 {
+  margin: 2px 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.headLine {
+  flex: 1;
+  height: 1px;
+  background: var(--purple);
+  opacity: 0.55;
+  transform-origin: left;
+  transition: opacity 0.3s var(--ease);
+}
+.head:hover .headLine { opacity: 1; }
+
+.allLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.25s var(--ease);
+}
+.allLink:hover { color: #62477b; }
+.allLink .arrow { color: #62477b; }
+.allLink:hover .arrow { transform: translateX(4px); }
+
+.arrow {
+  flex-shrink: 0;
+  transition: transform 0.3s var(--ease);
+}
+
+/* ---------- News cards ---------- */
+.newsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.newsCard {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: 70px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease),
+    border-color 0.3s var(--ease),
+    background 0.3s var(--ease);
+}
+
+.newsCard:hover,
+.newsCard:focus-visible {
+  transform: translateY(-3px);
+  background: #fff;
+  border-color: var(--purple);
+  box-shadow: 0 10px 22px -10px rgba(103, 77, 129, 0.38);
+  outline: none;
+}
+
+.newsDate {
+  position: relative;
+  flex: 0 0 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 6px 10px;
+  background: linear-gradient(180deg, var(--purple-soft), #f9f7fa);
+  border-right: 1px solid var(--border);
+  transition: background 0.3s var(--ease);
+}
+
+.newsDate b {
+  font-size: 1.45rem;
+  line-height: 1;
+  font-weight: 800;
+  color: #62477b;
+  transition: transform 0.3s var(--ease);
+}
+
+.newsDate small {
+  margin-top: 3px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #3a3a40;
+}
+
+.dateBar {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  width: 34px;
+  height: 2px;
+  background: var(--purple);
+  transform: translateX(-50%) scaleX(1);
+  transition: width 0.35s var(--ease);
+}
+
+.newsCard:hover .dateBar { width: 56px; }
+.newsCard:hover .newsDate { background: linear-gradient(180deg, #e7e1ed, #f3eff6); }
+.newsCard:hover .newsDate b { transform: scale(1.08); }
+
+.newsBody {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+}
+
+.newsBody h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+  transition: color 0.25s var(--ease);
+}
+.newsCard:hover .newsBody h3 { color: var(--purple-deep); }
+
+.readMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #62477b;
+}
+.newsCard:hover .readMore .arrow { transform: translateX(5px); }
+
+.lotus {
+  position: absolute;
+  right: 8px;
+  bottom: -8px;
+  width: 64px;
+  color: #62477b;
+  opacity: 0.1;
+  pointer-events: none;
+  transition: transform 0.5s var(--ease), opacity 0.4s var(--ease);
+}
+.newsCard:hover .lotus {
+  opacity: 0.2;
+  transform: scale(1.12) rotate(-4deg);
+}
+
+/* ---------- Tabs (CSS-only) ---------- */
+.tabs { position: relative; }
+
+.inputGeneral,
+.inputExam {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.tabList {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab {
+  padding: 7px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform 0.25s var(--ease),
+    background 0.25s var(--ease),
+    color 0.25s var(--ease),
+    border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+
+.tab:hover {
+  transform: translateY(-2px);
+  border-color: var(--purple);
+  color: #62477b;
+  box-shadow: 0 6px 12px -8px rgba(103, 77, 129, 0.5);
+}
+
+.inputGeneral:checked ~ .tabList .tabGeneral,
+.inputExam:checked ~ .tabList .tabExam {
+  background: var(--purple);
+  border-color: var(--purple);
+  color: #1d1d1b;
+}
+
+.inputGeneral:focus-visible ~ .tabList .tabGeneral,
+.inputExam:focus-visible ~ .tabList .tabExam {
+  outline: 2px solid var(--purple-deep);
+  outline-offset: 2px;
+}
+
+.inputGeneral:checked ~ .panels .panelExam,
+.inputExam:checked ~ .panels .panelGeneral {
+  display: none;
+}
+
+/* ---------- Notices ---------- */
+.noticeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  animation: panelIn 0.35s var(--ease);
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.noticeList li { border-bottom: 1px solid #ddd4e5; }
+.noticeList li:last-child { border-bottom: 0; }
+
+.noticeItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s var(--ease), background 0.3s var(--ease);
+}
+
+.noticeItem:hover,
+.noticeItem:focus-visible {
+  transform: translateX(5px);
+  background: linear-gradient(90deg, rgba(103, 77, 129, 0.06), transparent);
+  outline: none;
+}
+
+.noticeDate {
+  flex: 0 0 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 4px;
+  background: var(--purple);
+  color: #1d1d1b;
+  line-height: 1;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), background 0.3s var(--ease);
+}
+
+.noticeDate b { font-size: 1.15rem; font-weight: 800; }
+.noticeDate small { margin-top: 4px; font-size: 0.6rem; font-weight: 500; opacity: 0.95; }
+
+.noticeItem:hover .noticeDate {
+  background: var(--primary);
+  transform: scale(1.06);
+  box-shadow: 0 6px 12px -6px rgba(87, 65, 108, 0.7);
+}
+
+.noticeTitle {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--ink);
+  transition: color 0.25s var(--ease);
+}
+.noticeItem:hover .noticeTitle { color: var(--purple-deep); }
+
+/* ---------- Empty state ---------- */
+.emptyState {
+  padding: 18px;
+  font-size: 0.85rem;
+  text-align: center;
+  color: #6b6b73;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px dashed var(--border);
+  list-style: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; gap: 32px; }
+}
+
+@media (max-width: 480px) {
+  .newsDate { flex-basis: 72px; }
+  .headTitle h2 { font-size: 1.1rem; }
+  .noticeDate { flex-basis: 52px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrapper * { transition: none !important; animation: none !important; }
+}
+/* =====================  FAQ SECTION (mild purple, separate look)  ===================== */
+.faqSection {
+  position: relative;
+  padding: 48px 20px 56px;
+  color: #1a1a1f;
+  background: #fff;
+  overflow: hidden;
+}
+
+.faqInner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 0.85fr 1.4fr;
+  gap: 44px;
+  align-items: start;
+}
+
+/* ---------- Intro ---------- */
+.faqIntro { position: sticky; top: 24px; }
+
+.faqKicker {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #57416c;
+  background: #f3eff6;
+  border: 1px solid rgba(103, 77, 129, 0.35);
+  border-radius: 999px;
+}
+
+.faqHeading {
+  margin: 14px 0 10px;
+  font-size: 1.7rem;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #1a1a1f;
+}
+.faqHeading em { font-style: normal; color: #674d81; }
+
+.faqText {
+  margin: 0 0 20px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #5a4638;
+}
+
+.faqActions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.faqBtnPrimary,
+.faqBtnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+              box-shadow 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+              background 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.faqBtnPrimary { background: #cdbdde; color: #1d1d1b; }
+.faqBtnPrimary:hover {
+  transform: translateY(-2px);
+  background: #cdbdde;
+  box-shadow: 0 10px 20px -8px rgba(87, 65, 108, 0.6);
+}
+.faqBtnPrimary:hover .arrow { transform: translateX(4px); }
+
+.faqBtnGhost {
+  color: #57416c;
+  background: #fff;
+  border: 1px solid rgba(103, 77, 129, 0.5);
+}
+.faqBtnGhost:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  border-color: #674d81;
+  box-shadow: 0 8px 16px -10px rgba(87, 65, 108, 0.5);
+}
+
+/* ---------- Accordion ---------- */
+.faqList { display: flex; flex-direction: column; gap: 10px; }
+
+.faqItem {
+  background: #f7f5f9;
+  border: 1px solid rgba(103, 77, 129, 0.22);
+  border-radius: 12px;
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+              background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.faqItem:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  border-color: rgba(103, 77, 129, 0.55);
+  box-shadow: 0 10px 22px -14px rgba(87, 65, 108, 0.5);
+}
+
+.faqItem[open] {
+  background: #fff;
+  border-color: #674d81;
+  box-shadow: 0 14px 28px -16px rgba(87, 65, 108, 0.55);
+}
+
+.faqQuestion {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.faqQuestion::-webkit-details-marker { display: none; }
+.faqQuestion:focus-visible { outline: 2px solid #674d81; outline-offset: 2px; border-radius: 12px; }
+
+.faqNum {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #674d81;
+}
+
+.faqQText {
+  flex: 1;
+  font-size: 0.93rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #1a1a1f;
+  transition: color 0.25s;
+}
+.faqItem:hover .faqQText,
+.faqItem[open] .faqQText { color: #57416c; }
+
+/* plus → cross icon */
+.faqIcon {
+  position: relative;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f3eff6;
+  border: 1px solid rgba(103, 77, 129, 0.4);
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1),
+              background 0.3s, border-color 0.3s;
+}
+.faqIcon::before,
+.faqIcon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 1.6px;
+  background: #cdbdde;
+  transform: translate(-50%, -50%);
+  transition: background 0.3s;
+}
+.faqIcon::after { transform: translate(-50%, -50%) rotate(90deg); }
+
+.faqItem:hover .faqIcon { border-color: #674d81; }
+.faqItem[open] .faqIcon {
+  transform: rotate(135deg);
+  background: #cdbdde;
+  border-color: #674d81;
+}
+.faqItem[open] .faqIcon::before,
+.faqItem[open] .faqIcon::after { background: #fff; }
+
+.faqAnswer {
+  padding: 0 16px 16px 44px;
+  animation: faqIn 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.faqAnswer p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: #5a4638;
+}
+
+@keyframes faqIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 900px) {
+  .faqInner { grid-template-columns: 1fr; gap: 28px; }
+  .faqIntro { position: static; }
+}
+
+@media (max-width: 480px) {
+  .faqHeading { font-size: 1.4rem; }
+  .faqAnswer { padding-left: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faqSection * { transition: none !important; animation: none !important; }
+}
