@@ -1,5 +1,5 @@
-// EDIT THIS OBJECT. Every word shown in the section comes from here.
-const founder = {
+/* ---------- API data na thakle eta dekhabe ---------- */
+const defaults = {
   titleStart: "Led by service:",
   titleHighlight: "Meet our founder",
   image: "/founder.png",
@@ -19,7 +19,41 @@ const founder = {
   ],
 };
 
-export default function FounderSection() {
+async function getFounder() {
+  const headers = {
+    "x-api-key": process.env.API_KEY,
+    "office-id": process.env.OFFICE,
+  };
+
+  try {
+    const res = await fetch(`${process.env.BACKLINK}/public/founder`, {
+      headers,
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data || null;
+  } catch (error) {
+    console.error("[founder] error:", error.message);
+    return null;
+  }
+}
+
+export default async function FounderSection() {
+  const api = await getFounder();
+
+  const founder = api
+    ? {
+        ...defaults,
+        image: api.image || defaults.image,
+        imageAlt: api.name ? `${api.name} portrait` : defaults.imageAlt,
+        quote: api.quote || defaults.quote,
+        attribution: [api.name, api.designation].filter(Boolean).join(", "),
+        paragraphs: api.paragraphs?.length ? api.paragraphs : [],
+        accordions: api.accordions?.length ? api.accordions : [],
+      }
+    : defaults;
+
   return (
     <section className="vu-founder" aria-labelledby="founder-title">
       <h2 id="founder-title" className="vu-founder__title">
@@ -40,22 +74,24 @@ export default function FounderSection() {
         </figure>
       </div>
 
-      <div className="vu-founder__bottom">
-        <div className="vu-founder__text">
-          {founder.paragraphs.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-        </div>
+      {(founder.paragraphs.length > 0 || founder.accordions.length > 0) && (
+        <div className="vu-founder__bottom">
+          <div className="vu-founder__text">
+            {founder.paragraphs.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </div>
 
-        <div className="vu-founder__acc">
-          {founder.accordions.map((item, i) => (
-            <details key={i} open={i === 0}>
-              <summary>{item.title}</summary>
-              <p>{item.text}</p>
-            </details>
-          ))}
+          <div className="vu-founder__acc">
+            {founder.accordions.map((item, i) => (
+              <details key={item._id || i} open={i === 0}>
+                <summary>{item.title}</summary>
+                <p>{item.text}</p>
+              </details>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

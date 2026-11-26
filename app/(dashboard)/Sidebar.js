@@ -22,6 +22,8 @@ import {
   FaPhotoVideo,
   FaBookmark,
   FaPoll,
+  FaUserTie,
+  FaYoutube,
 } from "react-icons/fa";
 import NavItem from "./dashboard/components/NavItems";
 
@@ -39,7 +41,7 @@ function Sidebar() {
         `${process.env.NEXT_PUBLIC_BACKLINK}/dashboard/office/list`,
         {
           withCredentials: true,
-        }
+        },
       );
       setMenu(res.data.data.enabled_services);
       setofficeName(res.data.data.name);
@@ -98,6 +100,18 @@ function Sidebar() {
                 text="About Us"
               />
             )}
+
+            <NavItem
+              href="/dashboard/founder"
+              icon={FaUserTie}
+              text="Founder"
+            />
+
+            <NavItem
+              href="/dashboard/story_video"
+              icon={FaYoutube}
+              text="Story Video"
+            />
 
             {menu?.includes("notice") && (
               <NavItem

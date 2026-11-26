@@ -1,59 +1,27 @@
 import StatsCardGrid from "../components/StatsCardGrid";
 
-/* ============ NGO VIDEO: paste your YouTube link here later ============ */
-const ngoVideo = {
-  youtubeUrl: "", // e.g. "https://www.youtube.com/watch?v=XXXXXXXXXXX" (leave empty to show the demo design)
-  kicker: "Our Story",
-  title: "See our work in action",
-  text: "A short film about the people we serve, the programmes we run and the change we are building together with the community.",
-  points: [
-    "Real stories from the families we support",
-    "A look at our ongoing community projects",
-    "How volunteers and donors make a difference",
-  ],
-};
-
-// Works with watch?v=, youtu.be/, /embed/, /shorts/ and /live/ links
-function getYouTubeId(url = "") {
-  const m = String(url).match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/,
-  );
-  return m ? m[1] : "";
-}
+/* ---------- API helpers ---------- */
+const getHeaders = () => ({
+  "x-api-key": process.env.API_KEY,
+  "office-id": process.env.OFFICE,
+});
 
 async function getCountData() {
   try {
     const officeResponse = await fetch(
       `${process.env.BACKLINK}/public/officeData`,
-      {
-        headers: {
-          "x-api-key": process.env.API_KEY,
-          "office-id": process.env.OFFICE,
-        },
-        next: {
-          revalidate: 1000,
-        },
-      },
+      { headers: getHeaders(), next: { revalidate: 1000 } },
     );
-    if (!officeResponse.ok) {
-      return [];
-    }
+    if (!officeResponse.ok) return [];
 
     const officeData = await officeResponse.json();
     const isActive = officeData.data?.enabled_services?.includes("counter");
-
     if (!isActive) return [];
 
     const res = await fetch(`${process.env.BACKLINK}/public/counter`, {
-      headers: {
-        "x-api-key": process.env.API_KEY,
-        "office-id": process.env.OFFICE,
-      },
-      next: {
-        revalidate: 1000,
-      },
+      headers: getHeaders(),
+      next: { revalidate: 60 },
     });
-
     if (!res.ok) {
       console.error(`Failed to fetch counter data: ${res.statusText}`);
       return [];
@@ -67,28 +35,41 @@ async function getCountData() {
   }
 }
 
-/* ============ WHAT WE DO ============ */
-const workDetails = [
-  {
-    title: "Welfare Schemes",
-    text: "Helping families access government benefits, pensions and support programs.",
-  },
-  {
-    title: "Water & Sanitation",
-    text: "Clean drinking water, drainage and sanitation works for every ward.",
-  },
-  {
-    title: "Roads & Infrastructure",
-    text: "Building and maintaining village roads, lighting and public spaces.",
-  },
-  {
-    title: "Education & Health",
-    text: "Supporting schools, health camps and awareness drives in the community.",
-  },
-];
+// About Us: { description, image, video }
+async function getAboutData() {
+  try {
+    const res = await fetch(`${process.env.BACKLINK}/public/about`, {
+      headers: getHeaders(),
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const d = json?.data;
+    return d && !Array.isArray(d) ? d : Array.isArray(d) ? d[0] || null : null;
+  } catch (error) {
+    console.error("[about] error:", error.message);
+    return null;
+  }
+}
 
-/* ============ ABOUT / MISSION / VISION ============ */
-const ngoAbout = {
+// Founder: { accordions: [{ title, text }] } (Mission / Vision cards ekhan theke)
+async function getFounderData() {
+  try {
+    const res = await fetch(`${process.env.BACKLINK}/public/founder`, {
+      headers: getHeaders(),
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data || null;
+  } catch (error) {
+    console.error("[founder] error:", error.message);
+    return null;
+  }
+}
+
+/* ============ ABOUT: fallback (API te data na thakle) ============ */
+const aboutDefaults = {
   image: "/about.png",
   kicker: "About Us",
   title: "Working together for a stronger village",
@@ -101,52 +82,35 @@ const ngoAbout = {
     { value: "1200+", label: "Families supported" },
     { value: "70+", label: "Projects completed" },
   ],
-  mission: {
-    title: "Our Mission",
-    text: "To deliver fast, fair and transparent services that improve everyday life for every resident.",
-  },
-  vision: {
-    title: "Our Vision",
-    text: "A self-reliant, clean and prosperous village where every family has opportunity.",
-  },
-  values: {
-    title: "Our Values",
-    items: ["Transparency", "Integrity", "Inclusion", "Service first"],
-  },
+  cards: [
+    {
+      title: "Our Mission",
+      text: "To deliver fast, fair and transparent services that improve everyday life for every resident.",
+    },
+    {
+      title: "Our Vision",
+      text: "A self-reliant, clean and prosperous village where every family has opportunity.",
+    },
+    {
+      title: "Our Values",
+      text: "Transparency, integrity, inclusion and service first.",
+    },
+  ],
 };
 
-const aboutCss = `
-.vu-work {
-  padding: 72px 20px;
-  background: #fff;
-}
-.vu-work__inner { max-width: 1200px; margin: 0 auto; text-align: center; }
-.vu-work__grid {
-  margin-top: 32px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  text-align: left;
-}
-.vu-work__card {
-  display: block;
-  padding: 22px;
-  color: #1a1a1a;
-  text-decoration: none;
-  background: #f7f5f9;
-  border: 1px solid rgba(103, 77, 128, 0.22);
-  border-radius: 16px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.vu-work__card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 30px -20px rgba(103, 77, 128, 0.7);
-}
-.vu-work__num { font-size: 0.8rem; font-weight: 700; color: #674d80; }
-.vu-work__title { margin: 8px 0; font-size: 1.05rem; font-weight: 700; }
-.vu-work__text { margin: 0 0 12px; font-size: 0.88rem; line-height: 1.6; color: #3b3b3b; }
-.vu-work__more { font-size: 0.82rem; font-weight: 600; color: #674d80; }
+// description ke paragraph e bhag kore (new line diye)
+const splitParagraphs = (text) =>
+  String(text || "")
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
+const formatFact = (item) => ({
+  value: `${Number(item?.value ?? 0).toLocaleString("en-IN")}+`,
+  label: item?.text || item?.label || "",
+});
+
+const aboutCss = `
 .vu-about {
   padding: 72px 20px;
   background: linear-gradient(180deg, #ede9f2 0%, #f7f5f9 100%);
@@ -235,239 +199,48 @@ const aboutCss = `
 }
 .vu-about__card p { margin: 0; font-size: 0.9rem; line-height: 1.65; color: #3b3b3b; }
 .vu-about__label { margin: 0 0 10px; font-size: 1.05rem; font-weight: 700; color: #674d80; }
-.vu-about__values { margin: 0; padding-left: 18px; font-size: 0.9rem; line-height: 1.8; color: #3b3b3b; }
 
 @media (max-width: 900px) {
-  .vu-work__grid { grid-template-columns: repeat(2, 1fr); }
   .vu-about__top { grid-template-columns: 1fr; gap: 32px; }
   .vu-about__cards { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
-  .vu-work__grid { grid-template-columns: 1fr; }
   .vu-about__title { font-size: 1.5rem; }
 }
 `;
 
-const videoCss = `
-.vu-video {
-  --v-accent: #674d80;
-  --v-peach: #ded6e6;
-  --v-line: rgba(103, 77, 128, 0.22);
-  --v-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  padding: 72px 20px 96px;
-  color: #1a1a1a;
-  background: linear-gradient(180deg, #f7f5f9 0%, #ede9f2 100%);
-}
-.vu-video__inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 64px;
-  align-items: center;
-}
-.vu-video__content {
-  max-width: 460px;
-}
-
-/* ---------- Frame ---------- */
-.vu-video__frame {
-  position: relative;
-  padding: 8px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid var(--v-line);
-  box-shadow: 0 22px 44px -28px rgba(103, 77, 128, 0.6);
-  transition: transform 0.4s var(--v-ease), box-shadow 0.4s var(--v-ease);
-}
-.vu-video__frame:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 28px 50px -26px rgba(103, 77, 128, 0.7);
-}
-.vu-video__ratio {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #e6dfec;
-}
-.vu-video__ratio iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-/* ---------- Demo placeholder ---------- */
-.vu-video__demo {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background:
-    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.7), transparent 45%),
-    radial-gradient(circle at 85% 80%, rgba(103, 77, 128, 0.25), transparent 50%),
-    linear-gradient(135deg, #e8e2ee 0%, #d3c9de 100%);
-}
-.vu-video__demo::before,
-.vu-video__demo::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(103, 77, 128, 0.25);
-}
-.vu-video__demo::before { width: 55%; aspect-ratio: 1; }
-.vu-video__demo::after  { width: 80%; aspect-ratio: 1; opacity: 0.6; }
-
-.vu-video__play {
-  position: relative;
-  z-index: 1;
-  width: 72px;
-  height: 72px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.45), 0 14px 26px -10px rgba(103, 77, 128, 0.7);
-  transition: transform 0.35s var(--v-ease), box-shadow 0.35s var(--v-ease);
-}
-.vu-video__play::before {
-  content: "";
-  margin-left: 5px;
-  border-style: solid;
-  border-width: 11px 0 11px 18px;
-  border-color: transparent transparent transparent var(--v-accent);
-}
-.vu-video__frame:hover .vu-video__play {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 16px rgba(255, 255, 255, 0.4), 0 18px 30px -10px rgba(103, 77, 128, 0.8);
-}
-
-.vu-video__chip {
-  position: absolute;
-  z-index: 1;
-  padding: 5px 11px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #1a1a1a;
-  background: rgba(255, 255, 255, 0.88);
-  border-radius: 999px;
-}
-.vu-video__chip--tl { top: 12px; left: 12px; }
-.vu-video__chip--br { bottom: 12px; right: 12px; }
-
-.vu-video__demo-note {
-  position: absolute;
-  z-index: 1;
-  bottom: 12px;
-  left: 12px;
-  font-size: 0.72rem;
-  color: #352c3e;
-}
-
-/* ---------- Text side ---------- */
-.vu-video__kicker {
-  display: inline-block;
-  padding: 4px 12px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #1a1a1a;
-  background: var(--v-peach);
-  border-radius: 999px;
-}
-.vu-video__title {
-  margin: 14px 0 10px;
-  font-size: 1.7rem;
-  line-height: 1.2;
-  font-weight: 700;
-  color: #111;
-}
-.vu-video__title span { color: var(--v-accent); }
-.vu-video__text {
-  margin: 0 0 16px;
-  font-size: 0.92rem;
-  line-height: 1.7;
-  color: #3b3b3b;
-}
-.vu-video__points {
-  list-style: none;
-  margin: 0 0 22px;
-  padding: 0;
-  display: grid;
-  gap: 8px;
-}
-.vu-video__points li {
-  position: relative;
-  padding-left: 22px;
-  font-size: 0.88rem;
-  color: #2b2b2b;
-  transition: transform 0.3s var(--v-ease);
-}
-.vu-video__points li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.45em;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--v-peach);
-  border: 2px solid var(--v-accent);
-}
-.vu-video__points li:hover { transform: translateX(4px); }
-
-.vu-video__actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.vu-video__btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 9px 18px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #111;
-  text-decoration: none;
-  border-radius: 10px;
-  transition: transform 0.3s var(--v-ease), box-shadow 0.3s var(--v-ease), background 0.3s;
-}
-.vu-video__btn--solid { background: #d3c9de; border: 1px solid rgba(103, 77, 128, 0.35); }
-.vu-video__btn--solid:hover {
-  transform: translateY(-2px);
-  background: #cdbdde;
-  box-shadow: 0 10px 18px -12px rgba(103, 77, 128, 0.8);
-}
-.vu-video__btn--outline { background: rgba(255, 255, 255, 0.6); border: 1px solid var(--v-line); }
-.vu-video__btn--outline:hover {
-  transform: translateY(-2px);
-  background: #fff;
-  border-color: var(--v-accent);
-}
-
-@media (max-width: 900px) {
-  .vu-video { padding: 52px 20px 64px; }
-  .vu-video__inner { grid-template-columns: 1fr; gap: 32px; }
-  .vu-video__content { max-width: none; }
-}
-@media (max-width: 480px) {
-  .vu-video__title { font-size: 1.4rem; }
-  .vu-video__play { width: 58px; height: 58px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .vu-video * { transition: none !important; }
-}
-`;
-
-export default async function StatsCard() {
-  const data = await getCountData();
+export default async function StatsCard({ afterStats = null }) {
+  const [data, aboutApi, founderApi] = await Promise.all([
+    getCountData(),
+    getAboutData(),
+    getFounderData(),
+  ]);
 
   const metrics = Array.isArray(data) ? data.slice(0, 9) : [];
-  const videoId = getYouTubeId(ngoVideo.youtubeUrl);
+
+  /* ---------- About data (API + fallback) ---------- */
+  const apiParagraphs = splitParagraphs(aboutApi?.description);
+
+  const about = {
+    image: aboutApi?.image || aboutDefaults.image,
+    kicker: aboutDefaults.kicker,
+    title: aboutDefaults.title,
+    paragraphs: apiParagraphs.length ? apiParagraphs : aboutDefaults.paragraphs,
+    // Counter API theke prothom 3 ta
+    facts: metrics.length
+      ? metrics.slice(0, 3).map(formatFact)
+      : aboutDefaults.facts,
+    // Founder API er accordion theke prothom 3 ta
+    cards: founderApi?.accordions?.length
+      ? founderApi.accordions
+          .slice(0, 3)
+          .map((a) => ({ title: a.title, text: a.text }))
+      : aboutDefaults.cards,
+  };
 
   return (
     <>
+      {/* ================= STATS ================= */}
       <section className="vu-stories" aria-labelledby="stats-title">
         <div className="vu-stories__head">
           <h2 id="stats-title" className="vu-stories__title">
@@ -494,38 +267,17 @@ export default async function StatsCard() {
         </div>
       </section>
 
-      {/* ================= WORK DETAILS ================= */}
-      <section className="vu-work" aria-labelledby="work-title">
-        <style dangerouslySetInnerHTML={{ __html: aboutCss }} />
-        <div className="vu-work__inner">
-          <h2 id="work-title" className="vu-impact__title">
-            What we <span>do</span>
-          </h2>
-          <p className="vu-impact__sub">
-            A quick look at the main areas where our team works every day.
-          </p>
-          <div className="vu-work__grid">
-            {workDetails.map((w, i) => (
-              <a key={w.title} href="/project" className="vu-work__card">
-                <span className="vu-work__num">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 className="vu-work__title">{w.title}</h3>
-                <p className="vu-work__text">{w.text}</p>
-                <span className="vu-work__more">Learn more</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* What we do (Home theke prop hishebe ashe) */}
+      {afterStats}
 
       {/* ================= ABOUT, MISSION & VISION ================= */}
       <section className="vu-about" aria-labelledby="about-title">
+        <style dangerouslySetInnerHTML={{ __html: aboutCss }} />
         <div className="vu-about__inner">
           <div className="vu-about__top">
             <div className="vu-about__media">
-              {ngoAbout.image ? (
-                <img src={ngoAbout.image} alt="Our work with the community" />
+              {about.image ? (
+                <img src={about.image} alt="Our work with the community" />
               ) : (
                 <div
                   className="vu-about__placeholder"
@@ -553,18 +305,18 @@ export default async function StatsCard() {
             </div>
 
             <div className="vu-about__content">
-              <span className="vu-about__kicker">{ngoAbout.kicker}</span>
+              <span className="vu-about__kicker">{about.kicker}</span>
               <h2 id="about-title" className="vu-about__title">
-                {ngoAbout.title}
+                {about.title}
               </h2>
               <div className="vu-about__text">
-                {ngoAbout.paragraphs.map((p) => (
-                  <p key={p}>{p}</p>
+                {about.paragraphs.map((p, i) => (
+                  <p key={i}>{p}</p>
                 ))}
               </div>
               <div className="vu-about__facts">
-                {ngoAbout.facts.map((f) => (
-                  <div key={f.label} className="vu-about__fact">
+                {about.facts.map((f, i) => (
+                  <div key={`${f.label}-${i}`} className="vu-about__fact">
                     <strong>{f.value}</strong>
                     <span>{f.label}</span>
                   </div>
@@ -577,84 +329,12 @@ export default async function StatsCard() {
           </div>
 
           <div className="vu-about__cards">
-            <article className="vu-about__card vu-about__card--mission">
-              <h3 className="vu-about__label">{ngoAbout.mission.title}</h3>
-              <p>{ngoAbout.mission.text}</p>
-            </article>
-            <article className="vu-about__card vu-about__card--vision">
-              <h3 className="vu-about__label">{ngoAbout.vision.title}</h3>
-              <p>{ngoAbout.vision.text}</p>
-            </article>
-            <article className="vu-about__card vu-about__card--values">
-              <h3 className="vu-about__label">{ngoAbout.values.title}</h3>
-              <ul className="vu-about__values">
-                {ngoAbout.values.items.map((v) => (
-                  <li key={v}>{v}</li>
-                ))}
-              </ul>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= NGO VIDEO ================= */}
-      <section className="vu-video" aria-labelledby="video-title">
-        <style dangerouslySetInnerHTML={{ __html: videoCss }} />
-        <div className="vu-video__inner">
-          <div className="vu-video__frame">
-            <div className="vu-video__ratio">
-              {videoId ? (
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
-                  title={ngoVideo.title}
-                  loading="lazy"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              ) : (
-                <div
-                  className="vu-video__demo"
-                  role="img"
-                  aria-label="Video placeholder"
-                >
-                  <span className="vu-video__chip vu-video__chip--tl">
-                    Our Story
-                  </span>
-                  <span className="vu-video__play" />
-                  <span className="vu-video__chip vu-video__chip--br">
-                    03:24
-                  </span>
-                  <span className="vu-video__demo-note">
-                    Demo preview. Your YouTube video will appear here.
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="vu-video__content">
-            <span className="vu-video__kicker">{ngoVideo.kicker}</span>
-            <h2 id="video-title" className="vu-video__title">
-              {ngoVideo.title}
-            </h2>
-            <p className="vu-video__text">{ngoVideo.text}</p>
-            <ul className="vu-video__points">
-              {ngoVideo.points.map((p) => (
-                <li key={p}>{p}</li>
-              ))}
-            </ul>
-            <div className="vu-video__actions">
-              <a href="/videos" className="vu-video__btn vu-video__btn--solid">
-                Watch More Videos
-              </a>
-              <a
-                href="/contact"
-                className="vu-video__btn vu-video__btn--outline"
-              >
-                Get In Touch
-              </a>
-            </div>
+            {about.cards.map((c, i) => (
+              <article key={`${c.title}-${i}`} className="vu-about__card">
+                <h3 className="vu-about__label">{c.title}</h3>
+                <p>{c.text}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>

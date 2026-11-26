@@ -15,6 +15,8 @@ import StatsCard from "./StatsCard/page";
 import Founder from "./Founder/page";
 import Notice from "./notices/page";
 import Impact from "./impact/page"
+import WhatWeDo from "./WhatWeDo/page";
+import StoryVideo from "./StoryVideo/page";
 
 async function getData() {
   try {
@@ -64,7 +66,8 @@ export default async function Home() {
       <Founder />
       <Notice />
       <Impact />
-      <StatsCard beforeImpact={<ChairmanDesk section="news" />} />
+      <StatsCard afterStats={<WhatWeDo />} />
+      <StoryVideo />
       <About showFullDescription={false} />
       <GallerySmall />
       <ChairmanDesk section="contact" />
