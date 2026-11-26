@@ -1,26 +1,4 @@
-
-import StatsCardGrid, { ImpactCards } from "../components/StatsCardGrid";
-import FounderSection from "../components/FounderSection";
-
-
-// Replace these with your real figures
-const impactItems = [
-  {
-    label: "Families Supported",
-    value: 1200,
-    text: "Households reached through welfare schemes and village support programs.",
-  },
-  {
-    label: "Projects Completed",
-    value: 70,
-    text: "Roads, water, sanitation and community works delivered for the village.",
-  },
-  {
-    label: "Services Delivered",
-    value: 3200,
-    text: "Certificates, applications and citizen requests handled by the office.",
-  },
-];
+import StatsCardGrid from "../components/StatsCardGrid";
 
 /* ============ NGO VIDEO: paste your YouTube link here later ============ */
 const ngoVideo = {
@@ -38,22 +16,25 @@ const ngoVideo = {
 // Works with watch?v=, youtu.be/, /embed/, /shorts/ and /live/ links
 function getYouTubeId(url = "") {
   const m = String(url).match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/,
   );
   return m ? m[1] : "";
 }
 
 async function getCountData() {
   try {
-    const officeResponse = await fetch(`${process.env.BACKLINK}/public/officeData`, {
-      headers: {
-        "x-api-key": process.env.API_KEY,
-        "office-id": process.env.OFFICE,
+    const officeResponse = await fetch(
+      `${process.env.BACKLINK}/public/officeData`,
+      {
+        headers: {
+          "x-api-key": process.env.API_KEY,
+          "office-id": process.env.OFFICE,
+        },
+        next: {
+          revalidate: 1000,
+        },
       },
-      next: {
-        revalidate: 1000,
-      },
-    });
+    );
     if (!officeResponse.ok) {
       return [];
     }
@@ -74,7 +55,7 @@ async function getCountData() {
     });
 
     if (!res.ok) {
-      console.error(`Failed to fetch notice data: ${res.statusText}`);
+      console.error(`Failed to fetch counter data: ${res.statusText}`);
       return [];
     }
 
@@ -85,10 +66,6 @@ async function getCountData() {
     return [];
   }
 }
-
-
-
-
 
 /* ============ WHAT WE DO ============ */
 const workDetails = [
@@ -483,7 +460,7 @@ const videoCss = `
 }
 `;
 
-export default async function StatsCard({ beforeImpact = null }) {
+export default async function StatsCard() {
   const data = await getCountData();
 
   const metrics = Array.isArray(data) ? data.slice(0, 9) : [];
@@ -491,179 +468,196 @@ export default async function StatsCard({ beforeImpact = null }) {
 
   return (
     <>
-    <FounderSection />
-    {beforeImpact}
-
-    <section className="vu-impact" aria-labelledby="impact-title">
-      <h2 id="impact-title" className="vu-impact__title">
-        Our <span>Impact</span> in Action
-      </h2>
-      <p className="vu-impact__sub">
-        The TRUST WEBSITE works with villagers, volunteers and local leaders
-        to deliver services, support families and build a stronger community.
-      </p>
-      <ImpactCards items={impactItems} />
-    </section>
-
-    <section className="vu-stories" aria-labelledby="stats-title">
-      <div className="vu-stories__head">
-        <h2 id="stats-title" className="vu-stories__title">
-          Civic progress at a <span>glance</span>
-        </h2>
-        <p className="vu-stories__sub">
-          Key public counters arranged in a cleaner dashboard format for quick
-          review by residents and officials.
-        </p>
-      </div>
-
-      <StatsCardGrid metrics={metrics} />
-
-      <div className="vu-stories__actions">
-        <a href="/service" className="vu-stories__btn vu-stories__btn--solid">
-          Our Services
-        </a>
-        <a href="/contact" className="vu-stories__btn vu-stories__btn--outline">
-          Contact Us
-        </a>
-      </div>
-    </section>
-        {/* ================= WORK DETAILS ================= */}
-    <section className="vu-work" aria-labelledby="work-title">
-      <style dangerouslySetInnerHTML={{ __html: aboutCss }} />
-      <div className="vu-work__inner">
-        <h2 id="work-title" className="vu-impact__title">
-          What we <span>do</span>
-        </h2>
-        <p className="vu-impact__sub">
-          A quick look at the main areas where our team works every day.
-        </p>
-        <div className="vu-work__grid">
-          {workDetails.map((w, i) => (
-            <a key={w.title} href="/project" className="vu-work__card">
-              <span className="vu-work__num">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="vu-work__title">{w.title}</h3>
-              <p className="vu-work__text">{w.text}</p>
-              <span className="vu-work__more">Learn more</span>
-            </a>
-          ))}
+      <section className="vu-stories" aria-labelledby="stats-title">
+        <div className="vu-stories__head">
+          <h2 id="stats-title" className="vu-stories__title">
+            Civic progress at a <span>glance</span>
+          </h2>
+          <p className="vu-stories__sub">
+            Key public counters arranged in a cleaner dashboard format for quick
+            review by residents and officials.
+          </p>
         </div>
-      </div>
-    </section>
 
-    {/* ================= ABOUT, MISSION & VISION ================= */}
-    <section className="vu-about" aria-labelledby="about-title">
-      <div className="vu-about__inner">
-        <div className="vu-about__top">
-          <div className="vu-about__media">
-            {ngoAbout.image ? (
-  <img src={ngoAbout.image} alt="Our work with the community" />
-) : (
-  <div className="vu-about__placeholder" role="img" aria-label="Image placeholder">
-    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path d="M21 15l-5-5L5 21" />
-    </svg>
-  </div>
-)}
-            <span className="vu-about__badge">Serving the community</span>
+        <StatsCardGrid metrics={metrics} />
+
+        <div className="vu-stories__actions">
+          <a href="/service" className="vu-stories__btn vu-stories__btn--solid">
+            Our Services
+          </a>
+          <a
+            href="/contact"
+            className="vu-stories__btn vu-stories__btn--outline"
+          >
+            Contact Us
+          </a>
+        </div>
+      </section>
+
+      {/* ================= WORK DETAILS ================= */}
+      <section className="vu-work" aria-labelledby="work-title">
+        <style dangerouslySetInnerHTML={{ __html: aboutCss }} />
+        <div className="vu-work__inner">
+          <h2 id="work-title" className="vu-impact__title">
+            What we <span>do</span>
+          </h2>
+          <p className="vu-impact__sub">
+            A quick look at the main areas where our team works every day.
+          </p>
+          <div className="vu-work__grid">
+            {workDetails.map((w, i) => (
+              <a key={w.title} href="/project" className="vu-work__card">
+                <span className="vu-work__num">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h3 className="vu-work__title">{w.title}</h3>
+                <p className="vu-work__text">{w.text}</p>
+                <span className="vu-work__more">Learn more</span>
+              </a>
+            ))}
           </div>
+        </div>
+      </section>
 
-          <div className="vu-about__content">
-            <span className="vu-about__kicker">{ngoAbout.kicker}</span>
-            <h2 id="about-title" className="vu-about__title">
-              {ngoAbout.title}
-            </h2>
-            <div className="vu-about__text">
-              {ngoAbout.paragraphs.map((p) => (
-                <p key={p}>{p}</p>
-              ))}
-            </div>
-            <div className="vu-about__facts">
-              {ngoAbout.facts.map((f) => (
-                <div key={f.label} className="vu-about__fact">
-                  <strong>{f.value}</strong>
-                  <span>{f.label}</span>
+      {/* ================= ABOUT, MISSION & VISION ================= */}
+      <section className="vu-about" aria-labelledby="about-title">
+        <div className="vu-about__inner">
+          <div className="vu-about__top">
+            <div className="vu-about__media">
+              {ngoAbout.image ? (
+                <img src={ngoAbout.image} alt="Our work with the community" />
+              ) : (
+                <div
+                  className="vu-about__placeholder"
+                  role="img"
+                  aria-label="Image placeholder"
+                >
+                  <svg
+                    width="56"
+                    height="56"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#9a9a9a"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
                 </div>
-              ))}
+              )}
+              <span className="vu-about__badge">Serving the community</span>
             </div>
-            <a href="/About" className="vu-about__btn">
-              Read our full story
-            </a>
+
+            <div className="vu-about__content">
+              <span className="vu-about__kicker">{ngoAbout.kicker}</span>
+              <h2 id="about-title" className="vu-about__title">
+                {ngoAbout.title}
+              </h2>
+              <div className="vu-about__text">
+                {ngoAbout.paragraphs.map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+              </div>
+              <div className="vu-about__facts">
+                {ngoAbout.facts.map((f) => (
+                  <div key={f.label} className="vu-about__fact">
+                    <strong>{f.value}</strong>
+                    <span>{f.label}</span>
+                  </div>
+                ))}
+              </div>
+              <a href="/About" className="vu-about__btn">
+                Read our full story
+              </a>
+            </div>
+          </div>
+
+          <div className="vu-about__cards">
+            <article className="vu-about__card vu-about__card--mission">
+              <h3 className="vu-about__label">{ngoAbout.mission.title}</h3>
+              <p>{ngoAbout.mission.text}</p>
+            </article>
+            <article className="vu-about__card vu-about__card--vision">
+              <h3 className="vu-about__label">{ngoAbout.vision.title}</h3>
+              <p>{ngoAbout.vision.text}</p>
+            </article>
+            <article className="vu-about__card vu-about__card--values">
+              <h3 className="vu-about__label">{ngoAbout.values.title}</h3>
+              <ul className="vu-about__values">
+                {ngoAbout.values.items.map((v) => (
+                  <li key={v}>{v}</li>
+                ))}
+              </ul>
+            </article>
           </div>
         </div>
+      </section>
 
-        <div className="vu-about__cards">
-          <article className="vu-about__card vu-about__card--mission">
-            <h3 className="vu-about__label">{ngoAbout.mission.title}</h3>
-            <p>{ngoAbout.mission.text}</p>
-          </article>
-          <article className="vu-about__card vu-about__card--vision">
-            <h3 className="vu-about__label">{ngoAbout.vision.title}</h3>
-            <p>{ngoAbout.vision.text}</p>
-          </article>
-          <article className="vu-about__card vu-about__card--values">
-            <h3 className="vu-about__label">{ngoAbout.values.title}</h3>
-            <ul className="vu-about__values">
-              {ngoAbout.values.items.map((v) => (
-                <li key={v}>{v}</li>
+      {/* ================= NGO VIDEO ================= */}
+      <section className="vu-video" aria-labelledby="video-title">
+        <style dangerouslySetInnerHTML={{ __html: videoCss }} />
+        <div className="vu-video__inner">
+          <div className="vu-video__frame">
+            <div className="vu-video__ratio">
+              {videoId ? (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
+                  title={ngoVideo.title}
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              ) : (
+                <div
+                  className="vu-video__demo"
+                  role="img"
+                  aria-label="Video placeholder"
+                >
+                  <span className="vu-video__chip vu-video__chip--tl">
+                    Our Story
+                  </span>
+                  <span className="vu-video__play" />
+                  <span className="vu-video__chip vu-video__chip--br">
+                    03:24
+                  </span>
+                  <span className="vu-video__demo-note">
+                    Demo preview. Your YouTube video will appear here.
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="vu-video__content">
+            <span className="vu-video__kicker">{ngoVideo.kicker}</span>
+            <h2 id="video-title" className="vu-video__title">
+              {ngoVideo.title}
+            </h2>
+            <p className="vu-video__text">{ngoVideo.text}</p>
+            <ul className="vu-video__points">
+              {ngoVideo.points.map((p) => (
+                <li key={p}>{p}</li>
               ))}
             </ul>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    {/* ================= NGO VIDEO ================= */}
-    <section className="vu-video" aria-labelledby="video-title">
-      <style dangerouslySetInnerHTML={{ __html: videoCss }} />
-      <div className="vu-video__inner">
-        <div className="vu-video__frame">
-          <div className="vu-video__ratio">
-            {videoId ? (
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
-                title={ngoVideo.title}
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            ) : (
-              <div className="vu-video__demo" role="img" aria-label="Video placeholder">
-                <span className="vu-video__chip vu-video__chip--tl">Our Story</span>
-                <span className="vu-video__play" />
-                <span className="vu-video__chip vu-video__chip--br">03:24</span>
-                <span className="vu-video__demo-note">Demo preview. Your YouTube video will appear here.</span>
-              </div>
-            )}
+            <div className="vu-video__actions">
+              <a href="/videos" className="vu-video__btn vu-video__btn--solid">
+                Watch More Videos
+              </a>
+              <a
+                href="/contact"
+                className="vu-video__btn vu-video__btn--outline"
+              >
+                Get In Touch
+              </a>
+            </div>
           </div>
         </div>
-
-        <div className="vu-video__content">
-          <span className="vu-video__kicker">{ngoVideo.kicker}</span>
-          <h2 id="video-title" className="vu-video__title">
-            {ngoVideo.title}
-          </h2>
-          <p className="vu-video__text">{ngoVideo.text}</p>
-          <ul className="vu-video__points">
-            {ngoVideo.points.map((p) => (
-              <li key={p}>{p}</li>
-            ))}
-          </ul>
-          <div className="vu-video__actions">
-            <a href="/videos" className="vu-video__btn vu-video__btn--solid">
-              Watch More Videos
-            </a>
-            <a href="/contact" className="vu-video__btn vu-video__btn--outline">
-              Get In Touch
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-
+      </section>
     </>
   );
 }

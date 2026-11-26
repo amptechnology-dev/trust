@@ -12,6 +12,9 @@ import ServiceGrid from "./service/page";
 import Tender from "./Tender/page";
 import Ads from "./Ads/page";
 import StatsCard from "./StatsCard/page";
+import Founder from "./Founder/page";
+import Notice from "./notices/page";
+import Impact from "./impact/page"
 
 async function getData() {
   try {
@@ -58,6 +61,9 @@ export default async function Home() {
     <main className={styles.main}>
       <Hero />
       <Tender />
+      <Founder />
+      <Notice />
+      <Impact />
       <StatsCard beforeImpact={<ChairmanDesk section="news" />} />
       <About showFullDescription={false} />
       <GallerySmall />

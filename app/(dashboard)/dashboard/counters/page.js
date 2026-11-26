@@ -160,7 +160,7 @@ function Page() {
             </tr>
           </thead>
           <tbody>
-            {counters.map((counterItem) => (
+            {counters?.map((counterItem) => (
               <tr key={counterItem._id}>
                 <td>{counterItem.text}</td>
                 <td>{counterItem.value}</td>
