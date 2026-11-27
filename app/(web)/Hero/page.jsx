@@ -1,6 +1,6 @@
 import HeroSection from "../components/Hero";
 
-const heroImage = "/BANNER1.avif";
+const heroImage = "/BANNER1.avif"; // API te kono banner na thakle fallback
 
 const heroCss = `
 .gp-hero {
@@ -51,6 +51,22 @@ const heroCss = `
 .gp-hero__btn--solid { background: #cdbdde; border: 1.5px solid #8262a1; color: #1d1d1b; }
 .gp-hero__btn--outline { background: transparent; border: 1.5px solid #fff; color: #fff; }
 .gp-hero__btn--outline:hover { background: #fff; color: #1d1d1b; }
+
+/* Dynamic panel er image er upor text porar jonno dark overlay */
+.vu-panel--dynamic {
+  position: relative;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+.vu-panel--dynamic .vu-panel__text {
+  position: relative;
+  z-index: 1;
+}
+.vu-panel--dynamic .vu-panel__line {
+  color: #fff;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
 `;
 
 const getProjectData = async () => {
@@ -64,66 +80,127 @@ const getProjectData = async () => {
         revalidate: 1000,
       },
     });
-    const data = await res.json();
-    return data;
+    if (!res.ok) return null;
+    return await res.json();
   } catch (error) {
     console.error("Error fetching project data:", error);
     return null;
   }
 };
 
+// Full URL hole direct, na hole BACKPUBLIC jure
+const resolveSrc = (value) => {
+  if (typeof value !== "string" || !value.trim()) return "";
+  const v = value.trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  const back = process.env.NEXT_PUBLIC_BACKPUBLIC || "";
+  return `${back}/${v.replace(/^public\//, "").replace(/^\/+/, "")}`;
+};
+
+// "Line 1 | Line 2" ba new line diye ek banner e ekadhik line
+const splitLines = (text) =>
+  typeof text === "string"
+    ? text
+        .split(/\n|\|/)
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : [];
+
 export default async function videosPage() {
   const videos = await getProjectData();
-  const bannerUrl = videos?.data?.video_banner;
+  const data = videos?.data;
+  const bannerUrl = data?.video_banner;
+
+  // banner[i] + banner_text[i] ek sathe jure slide
+  const images = Array.isArray(data?.banner) ? data.banner : [];
+  const texts = Array.isArray(data?.banner_text) ? data.banner_text : [];
+
+  const slides = images
+    .map((img, i) => ({
+      image: resolveSrc(img),
+      lines: splitLines(texts[i]),
+    }))
+    .filter((s) => s.image);
+
+  // Video thakle shob slide panel, na hole prothom slide hero ar baki panel
+  const heroSlide = bannerUrl ? null : slides[0] || null;
+  const panelSlides = bannerUrl ? slides : slides.slice(1);
+
+  // Hero title: banner text thakle seta, na hole office name (word wise)
+  const officeName = (data?.name || "").trim();
+  const heroLines =
+    heroSlide?.lines?.length
+      ? heroSlide.lines
+      : officeName
+      ? officeName.split(/\s+/)
+      : ["Welcome"];
+
+  const heroBg = heroSlide?.image || heroImage;
 
   return (
     <main className="hero-page hero-page--video">
       <div className="vu-stack">
-      <section
-        className={`hero-frame hero-frame--video vu-stack__hero${bannerUrl ? "" : " hero-frame--vu"}`}
-      >
-        {bannerUrl ? (
-          <HeroSection data={bannerUrl} />
-        ) : (
-          <div
-            className="gp-hero"
-            style={heroImage ? { backgroundImage: `url(${heroImage})` } : undefined}
-          >
-            <style dangerouslySetInnerHTML={{ __html: heroCss }} />
-            <div className="gp-hero__inner">
-              <h1 className="gp-hero__title">
-                <span>TRUST</span>
-                <span>WEBSITE</span>
-              </h1>
+        <section
+          className={`hero-frame hero-frame--video vu-stack__hero${
+            bannerUrl ? "" : " hero-frame--vu"
+          }`}
+        >
+          {bannerUrl ? (
+            <HeroSection data={bannerUrl} />
+          ) : (
+            <div
+              className="gp-hero"
+              style={{ backgroundImage: `url(${heroBg})` }}
+            >
+              <style dangerouslySetInnerHTML={{ __html: heroCss }} />
+              <div className="gp-hero__inner">
+                <h1 className="gp-hero__title">
+                  {heroLines.map((line, i) => (
+                    <span key={i}>{line}</span>
+                  ))}
+                </h1>
 
-              <div className="gp-hero__actions">
-                <a href="/service" className="gp-hero__btn gp-hero__btn--solid">
-                  Our Services
-                </a>
-                <a href="/grievance" className="gp-hero__btn gp-hero__btn--outline">
-                  Contact Us
-                </a>
+                <div className="gp-hero__actions">
+                  <a
+                    href="/service"
+                    className="gp-hero__btn gp-hero__btn--solid"
+                  >
+                    Our Services
+                  </a>
+                  <a
+                    href="/grievance"
+                    className="gp-hero__btn gp-hero__btn--outline"
+                  >
+                    Contact Us
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
 
-      <section className="vu-panel vu-panel--one">
-        <div className="vu-panel__text">
-          <span className="vu-panel__line">Village Development</span>
-          <span className="vu-panel__line">Public Services</span>
-          <span className="vu-panel__line">Citizen First</span>
-        </div>
-      </section>
-
-      <section className="vu-panel vu-panel--two">
-        <div className="vu-panel__text">
-          <span className="vu-panel__line">Transparent Governance</span>
-          <span className="vu-panel__line">Community Voices</span>
-          <span className="vu-panel__line">Growing Together</span>
-        </div>
-      </section>
+        {/* Video banner thakle ba 2nd+ banner thakle, ek ek kore dynamic panel */}
+        {panelSlides.map((slide, i) => (
+          <section
+            key={i}
+            className={`vu-panel vu-panel--dynamic ${
+              i % 2 === 0 ? "vu-panel--one" : "vu-panel--two"
+            }`}
+            style={{
+              backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${slide.image})`,
+            }}
+          >
+            {/* video hero thakle style tag ta hero te nei, tai ekhane o dilam */}
+            {i === 0 && <style dangerouslySetInnerHTML={{ __html: heroCss }} />}
+            <div className="vu-panel__text">
+              {slide.lines.map((line, j) => (
+                <span key={j} className="vu-panel__line">
+                  {line}
+                </span>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </main>
   );

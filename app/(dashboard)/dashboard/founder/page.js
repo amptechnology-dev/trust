@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import swal from "sweetalert";
 
@@ -9,7 +9,7 @@ const emptyAccordion = { title: "", text: "" };
 function Page() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(null); 
+  const [saved, setSaved] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -30,14 +30,20 @@ function Page() {
       para1: f?.paragraphs?.[0] || "",
       para2: f?.paragraphs?.[1] || "",
     });
-    setAccordions(f?.accordions?.length ? f.accordions.map(({ title, text }) => ({ title, text })) : [{ ...emptyAccordion }]);
+    setAccordions(
+      f?.accordions?.length
+        ? f.accordions.map(({ title, text }) => ({ title, text }))
+        : [{ ...emptyAccordion }],
+    );
     setPreview(f?.image || "");
     setImageFile(null);
   };
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/dashboard/founder/list`, { withCredentials: true });
+      const res = await axios.get(`${API}/dashboard/founder/list`, {
+        withCredentials: true,
+      });
       const data = res?.data?.data || null;
       setSaved(data);
       fillForm(data);
@@ -46,11 +52,11 @@ function Page() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   // notun preview URL memory leak na hoy
   useEffect(() => {
@@ -72,10 +78,14 @@ function Page() {
   };
 
   const updateAccordion = (i, field, value) =>
-    setAccordions((prev) => prev.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)));
+    setAccordions((prev) =>
+      prev.map((a, idx) => (idx === i ? { ...a, [field]: value } : a)),
+    );
 
-  const addAccordion = () => setAccordions((p) => [...p, { ...emptyAccordion }]);
-  const removeAccordion = (i) => setAccordions((p) => p.filter((_, idx) => idx !== i));
+  const addAccordion = () =>
+    setAccordions((p) => [...p, { ...emptyAccordion }]);
+  const removeAccordion = (i) =>
+    setAccordions((p) => p.filter((_, idx) => idx !== i));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,7 +111,11 @@ function Page() {
       swal("Success!", "Founder saved successfully!", "success");
       await load();
     } catch (error) {
-      swal("Error!", error?.response?.data?.errors || "Something went wrong!", "error");
+      swal(
+        "Error!",
+        error?.response?.data?.errors || "Something went wrong!",
+        "error",
+      );
       console.error("Error:", error);
     } finally {
       setSaving(false);
@@ -118,7 +132,9 @@ function Page() {
     }).then(async (willDelete) => {
       if (!willDelete) return;
       try {
-        await axios.delete(`${API}/dashboard/founder/delete`, { withCredentials: true });
+        await axios.delete(`${API}/dashboard/founder/delete`, {
+          withCredentials: true,
+        });
         swal("Deleted Successfully!", { icon: "success" });
         setSaved(null);
         fillForm(null);
@@ -133,44 +149,99 @@ function Page() {
 
   return (
     <div className="container pt-3">
-      <h2 style={{ color: "#007bff" }}>{saved ? "Edit Founder" : "Add Founder"}</h2>
+      <h2 style={{ color: "#007bff" }}>
+        {saved ? "Edit Founder" : "Add Founder"}
+      </h2>
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Founder Name *</label>
-          <input className="form-control" name="name" value={form.name} onChange={handleChange} required />
+          <input
+            className="form-control"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Designation</label>
-          <input className="form-control" name="designation" value={form.designation} onChange={handleChange} placeholder="Founder" />
+          <input
+            className="form-control"
+            name="designation"
+            value={form.designation}
+            onChange={handleChange}
+            placeholder="Founder"
+          />
         </div>
 
         <div className="form-group">
           <label>
-            Image <span className="font-italic text-sm font-weight-light">(square / portrait recommended)</span>
+            Image{" "}
+            <span className="font-italic text-sm font-weight-light">
+              (square / portrait recommended)
+            </span>
           </label>
-          <input type="file" className="form-control" accept="image/jpg, image/jpeg, image/png, image/webp" onChange={handleImage} />
+          <input
+            type="file"
+            className="form-control"
+            accept="image/jpg, image/jpeg, image/png, image/webp"
+            onChange={handleImage}
+          />
           {preview && (
-            <img src={preview} alt="Founder preview" style={{ marginTop: 10, width: 160, height: 160, objectFit: "cover", borderRadius: 8 }} />
+            <img
+              src={preview}
+              alt="Founder preview"
+              style={{
+                marginTop: 10,
+                width: 160,
+                height: 160,
+                objectFit: "cover",
+                borderRadius: 8,
+              }}
+            />
           )}
         </div>
 
         <div className="form-group">
           <label>
-            Founder's Message * <span className="font-italic text-sm font-weight-light">(max 500 characters)</span>
+            Founder&apos;s Message *{" "}
+            <span className="font-italic text-sm font-weight-light">
+              (max 500 characters)
+            </span>
           </label>
-          <textarea className="form-control" name="quote" rows={3} maxLength={500} value={form.quote} onChange={handleChange} required />
+          <textarea
+            className="form-control"
+            name="quote"
+            rows={3}
+            maxLength={500}
+            value={form.quote}
+            onChange={handleChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Introduction – Paragraph 1</label>
-          <textarea className="form-control" name="para1" rows={2} value={form.para1} onChange={handleChange} />
+          <textarea
+            className="form-control"
+            name="para1"
+            rows={2}
+            value={form.para1}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="form-group">
           <label>Introduction – Paragraph 2</label>
-          <textarea className="form-control" name="para2" rows={2} value={form.para2} onChange={handleChange} />
+          <textarea
+            className="form-control"
+            name="para2"
+            rows={2}
+            value={form.para2}
+            onChange={handleChange}
+          />
         </div>
 
         <h5 className="mt-4">Accordion Items</h5>
@@ -178,27 +249,53 @@ function Page() {
           <div key={i} className="border rounded p-3 mb-3">
             <div className="form-group">
               <label>Title (e.g. Our vision)</label>
-              <input className="form-control" value={a.title} onChange={(e) => updateAccordion(i, "title", e.target.value)} />
+              <input
+                className="form-control"
+                value={a.title}
+                onChange={(e) => updateAccordion(i, "title", e.target.value)}
+              />
             </div>
             <div className="form-group">
               <label>Text</label>
-              <textarea className="form-control" rows={2} value={a.text} onChange={(e) => updateAccordion(i, "text", e.target.value)} />
+              <textarea
+                className="form-control"
+                rows={2}
+                value={a.text}
+                onChange={(e) => updateAccordion(i, "text", e.target.value)}
+              />
             </div>
-            <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeAccordion(i)} disabled={accordions.length === 1}>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-danger"
+              onClick={() => removeAccordion(i)}
+              disabled={accordions.length === 1}
+            >
               Remove
             </button>
           </div>
         ))}
-        <button type="button" className="btn btn-outline-primary mb-3" onClick={addAccordion}>
+        <button
+          type="button"
+          className="btn btn-outline-primary mb-3"
+          onClick={addAccordion}
+        >
           + Add Item
         </button>
 
         <div>
-          <button type="submit" className="btn btn-primary mr-2" disabled={saving}>
+          <button
+            type="submit"
+            className="btn btn-primary mr-2"
+            disabled={saving}
+          >
             {saving ? "Saving..." : saved ? "UPDATE" : "SAVE"}
           </button>
           {saved && (
-            <button type="button" className="btn btn-danger" onClick={handleDelete}>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleDelete}
+            >
               Delete
             </button>
           )}

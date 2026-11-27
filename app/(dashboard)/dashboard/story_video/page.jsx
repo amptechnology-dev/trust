@@ -71,7 +71,7 @@ function Page() {
       await axios.put(
         `${API}/dashboard/story_video/save`,
         { ...form, points },
-        { withCredentials: true }
+        { withCredentials: true },
       );
       swal("Success!", "Story video saved successfully!", "success");
       await load();
@@ -79,7 +79,7 @@ function Page() {
       swal(
         "Error!",
         error?.response?.data?.errors || "Something went wrong!",
-        "error"
+        "error",
       );
       console.error("Error:", error);
     } finally {
@@ -136,7 +136,7 @@ function Page() {
           <label>
             YouTube Channel URL{" "}
             <span className="font-italic text-sm font-weight-light">
-              ("Watch More Videos" button ei link e jabe)
+              (&quot;Watch More Videos&quot; Button will be gone on this link)
             </span>
           </label>
           <input
@@ -212,11 +212,19 @@ function Page() {
         </button>
 
         <div>
-          <button type="submit" className="btn btn-primary mr-2" disabled={saving}>
+          <button
+            type="submit"
+            className="btn btn-primary mr-2"
+            disabled={saving}
+          >
             {saving ? "Saving..." : saved ? "UPDATE" : "SAVE"}
           </button>
           {saved && (
-            <button type="button" className="btn btn-danger" onClick={handleDelete}>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleDelete}
+            >
               Delete
             </button>
           )}

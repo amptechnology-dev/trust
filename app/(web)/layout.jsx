@@ -53,19 +53,21 @@ async function getLinks() {
 }
 
 async function getBg() {
-  const res = await fetch(process.env.BACKLINK + "/public/headings", {
-    headers: {
-      "x-api-key": process.env.API_KEY,
-      "office-id": process.env.OFFICE,
-    },
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    return res.statusText;
+  try {
+    const res = await fetch(process.env.BACKLINK + "/public/headings", {
+      headers: {
+        "x-api-key": process.env.API_KEY,
+        "office-id": process.env.OFFICE,
+      },
+      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("[layout] getBg failed:", error.message);
+    return null;
   }
-
-  return res.json();
 }
 
 export default async function RootLayout({ children }) {

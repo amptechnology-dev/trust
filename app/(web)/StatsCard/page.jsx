@@ -6,16 +6,25 @@ const getHeaders = () => ({
   "office-id": process.env.OFFICE,
 });
 
-async function getCountData() {
+// Office data ekbar fetch, counter ar gallery duto-te use hobe
+async function getOfficeData() {
   try {
-    const officeResponse = await fetch(
-      `${process.env.BACKLINK}/public/officeData`,
-      { headers: getHeaders(), next: { revalidate: 1000 } },
-    );
-    if (!officeResponse.ok) return [];
+    const res = await fetch(`${process.env.BACKLINK}/public/officeData`, {
+      headers: getHeaders(),
+      next: { revalidate: 1000 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data ?? null;
+  } catch (error) {
+    console.error("[officeData] error:", error.message);
+    return null;
+  }
+}
 
-    const officeData = await officeResponse.json();
-    const isActive = officeData.data?.enabled_services?.includes("counter");
+async function getCountData(office) {
+  try {
+    const isActive = office?.enabled_services?.includes("counter");
     if (!isActive) return [];
 
     const res = await fetch(`${process.env.BACKLINK}/public/counter`, {
@@ -31,6 +40,30 @@ async function getCountData() {
     return Array.isArray(payload?.data?.counter) ? payload.data.counter : [];
   } catch (error) {
     console.error("Error:", error.message);
+    return [];
+  }
+}
+
+// Gallery: "gallery" service enabled thakle /public/gallery fetch
+async function getGalleryData(office) {
+  try {
+    const isActive = office?.enabled_services?.includes("gallery");
+    if (!isActive) return [];
+
+    const res = await fetch(`${process.env.BACKLINK}/public/gallery`, {
+      headers: getHeaders(),
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) {
+      console.error(`Failed to fetch gallery data: ${res.statusText}`);
+      return [];
+    }
+
+    const json = await res.json();
+    const d = json?.data;
+    return Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : [];
+  } catch (error) {
+    console.error("Gallery Error:", error.message);
     return [];
   }
 }
@@ -67,6 +100,19 @@ async function getFounderData() {
     return null;
   }
 }
+
+/* ---------- Helpers ---------- */
+// Full URL hole direct, na hole BACKPUBLIC jure
+const resolveSrc = (value) => {
+  if (typeof value !== "string" || !value.trim()) return "";
+  const v = value.trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  const back = process.env.NEXT_PUBLIC_BACKPUBLIC || "";
+  return `${back}/${v.replace(/^public\//, "").replace(/^\/+/, "")}`;
+};
+
+const getGalleryImage = (item) =>
+  resolveSrc(item?.image || item?.photo || item?.img || item?.url || "");
 
 /* ============ ABOUT: fallback (API te data na thakle) ============ */
 const aboutDefaults = {
@@ -210,13 +256,30 @@ const aboutCss = `
 `;
 
 export default async function StatsCard({ afterStats = null }) {
-  const [data, aboutApi, founderApi] = await Promise.all([
-    getCountData(),
+  // Office data ekbar, tarpor baki shob parallel e
+  const office = await getOfficeData();
+
+  const [data, aboutApi, founderApi, galleryData] = await Promise.all([
+    getCountData(office),
     getAboutData(),
     getFounderData(),
+    getGalleryData(office),
   ]);
 
-  const metrics = Array.isArray(data) ? data.slice(0, 9) : [];
+  const baseMetrics = Array.isArray(data) ? data.slice(0, 9) : [];
+
+  /* ---------- Gallery chhobi (API theke) ---------- */
+  const galleryImages = (Array.isArray(galleryData) ? galleryData : [])
+    .map(getGalleryImage)
+    .filter(Boolean);
+
+  /* ---------- Protita stats card e gallery chhobi jure dewa ---------- */
+  // Chhobi kom hole prothom theke abar repeat hobe
+  const metrics = baseMetrics.map((m, i) => {
+    if (!galleryImages.length) return m;
+    const img = galleryImages[i % galleryImages.length];
+    return { ...m, image: img, src: img, img };
+  });
 
   /* ---------- About data (API + fallback) ---------- */
   const apiParagraphs = splitParagraphs(aboutApi?.description);
@@ -227,8 +290,8 @@ export default async function StatsCard({ afterStats = null }) {
     title: aboutDefaults.title,
     paragraphs: apiParagraphs.length ? apiParagraphs : aboutDefaults.paragraphs,
     // Counter API theke prothom 3 ta
-    facts: metrics.length
-      ? metrics.slice(0, 3).map(formatFact)
+    facts: baseMetrics.length
+      ? baseMetrics.slice(0, 3).map(formatFact)
       : aboutDefaults.facts,
     // Founder API er accordion theke prothom 3 ta
     cards: founderApi?.accordions?.length
@@ -240,7 +303,7 @@ export default async function StatsCard({ afterStats = null }) {
 
   return (
     <>
-      {/* ================= STATS ================= */}
+      {/* ================= STATS (chhobi gallery API theke) ================= */}
       <section className="vu-stories" aria-labelledby="stats-title">
         <div className="vu-stories__head">
           <h2 id="stats-title" className="vu-stories__title">
@@ -252,7 +315,7 @@ export default async function StatsCard({ afterStats = null }) {
           </p>
         </div>
 
-        <StatsCardGrid metrics={metrics} />
+        <StatsCardGrid metrics={metrics} images={galleryImages} />
 
         <div className="vu-stories__actions">
           <a href="/service" className="vu-stories__btn vu-stories__btn--solid">

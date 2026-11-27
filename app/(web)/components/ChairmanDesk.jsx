@@ -24,21 +24,15 @@ const DEMO_NOTICES = [
   { id: "backlog-exam-schedule", title: "Backlog Examination Schedule for 2023 Batch", date: "2026-09-26", category: "Examination" },
 ];
 
-const DEMO_FAQS = [
-  { id: 1, question: "How can I apply for direct admission?", answer: "Check the latest Direct Admission notice in the Notices section above, fill in the application form and submit it with the required documents before the last date mentioned in the notice." },
-  { id: 2, question: "When will degree certificates be distributed?", answer: "Distribution dates for each pass-out batch are published under General notices. Please carry your ID card and the acknowledgement slip when collecting your certificate." },
-  { id: 3, question: "How do I apply for a scholarship?", answer: "Scholarship notices, eligibility criteria and application links are posted in the Notices section. You can also visit the office with your marksheet and income documents for guidance." },
-  { id: 4, question: "Where can I find the examination time table and admit cards?", answer: "Open the Examination tab in the Notices section. Time tables, form fill-up dates and admit card notices are posted there as soon as they are released." },
-  { id: 5, question: "How can I contact the office?", answer: "Use the Contact Office page to send a message or find phone numbers and the office address. We usually respond within two working days." },
-];
+const apiHeaders = () => ({
+  "x-api-key": process.env.API_KEY,
+  "office-id": process.env.OFFICE,
+});
 
 async function fetchList(path) {
   try {
     const res = await fetch(process.env.BACKLINK + path, {
-      headers: {
-        "x-api-key": process.env.API_KEY,
-        "office-id": process.env.OFFICE,
-      },
+      headers: apiHeaders(),
       next: { revalidate: 1000 },
     });
     if (!res.ok) return [];
@@ -49,13 +43,11 @@ async function fetchList(path) {
     return [];
   }
 }
+
 async function getOfficeInfo() {
   try {
     const res = await fetch(`${process.env.BACKLINK}/public/officeData`, {
-      headers: {
-        "x-api-key": process.env.API_KEY,
-        "office-id": process.env.OFFICE,
-      },
+      headers: apiHeaders(),
       next: { revalidate: 1000 },
     });
     if (!res.ok) return null;
@@ -63,6 +55,32 @@ async function getOfficeInfo() {
     return json?.data ?? null;
   } catch (error) {
     return null;
+  }
+}
+
+// FAQ: age check kore "faq" service enabled kina, tarpor /public/faq fetch
+async function getFaqData(office) {
+  try {
+    // office data na pele o FAQ fetch korar chesta korbe,
+    // office data pele "faq" enabled na thakle null (section hide)
+    if (office && !office?.enabled_services?.includes("faq")) return null;
+
+    const res = await fetch(`${process.env.BACKLINK}/public/faq`, {
+      headers: apiHeaders(),
+      next: { revalidate: 1000 },
+    });
+
+    if (!res.ok) {
+      console.error(`Failed to fetch faq data: ${res.statusText}`);
+      return null;
+    }
+
+    const json = await res.json();
+    const d = json?.data;
+    return Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : [];
+  } catch (error) {
+    console.error("FAQ Error:", error.message);
+    return [];
   }
 }
 
@@ -104,6 +122,12 @@ const getTitle = (item) => item?.title || item?.name || item?.heading || "Untitl
 const getId = (item, i) => item?.slug || item?._id || item?.id || i;
 const isExam = (item) => /exam/i.test(item?.category || item?.type || item?.tag || "");
 
+// FAQ er question / answer field name alada hole o kaj korbe
+const getQuestion = (item) =>
+  item?.question || item?.title || item?.name || item?.heading || "";
+const getAnswer = (item) =>
+  item?.answer || item?.description || item?.reply || item?.content || "";
+
 function Lotus({ className }) {
   return (
     <svg className={className} viewBox="0 0 120 100" aria-hidden="true" focusable="false">
@@ -129,11 +153,14 @@ function Arrow() {
 export default async function NewsAndNotices({ section = "all" }) {
   const showNews = section !== "contact";
   const showContact = section !== "news";
-  const [newsData, noticeData, faqData, office] = await Promise.all([
+
+  // office data ekbar fetch hobe, contact info ar faq check duto te use hobe
+  const office = showContact ? await getOfficeInfo() : null;
+
+  const [newsData, noticeData, faqData] = await Promise.all([
     showNews ? fetchList("/public/news") : [],
     showNews ? fetchList("/public/notices") : [],
-    showContact ? fetchList("/public/faq") : [],
-    showContact ? getOfficeInfo() : null,
+    showContact ? getFaqData(office) : null,
   ]);
 
   const info = {
@@ -143,16 +170,18 @@ export default async function NewsAndNotices({ section = "all" }) {
     address: office?.address || contactDefaults.address,
   };
 
-  // Fallback to demo data when the API gives nothing.
-  // To ALWAYS show demo data while designing, use the DEMO_* arrays directly.
+  // News / Notices: API te kichu na thakle demo data
   const newsSource = newsData.length ? newsData : DEMO_NEWS;
   const noticeSource = noticeData.length ? noticeData : DEMO_NOTICES;
-  const faqSource = faqData.length ? faqData : DEMO_FAQS;
 
   const news = newsSource.slice(0, 4);
   const generalNotices = noticeSource.filter((n) => !isExam(n)).slice(0, 5);
   const examNotices = noticeSource.filter(isExam).slice(0, 5);
-  const faqs = faqSource.slice(0, 6);
+
+  // FAQ: shudhu API data, demo nei. Question ba answer khali thakle bad
+  const faqs = (Array.isArray(faqData) ? faqData : [])
+    .filter((f) => getQuestion(f) && getAnswer(f))
+    .slice(0, 6);
 
   const renderNotices = (list, emptyText) =>
     list.length ? (
@@ -177,124 +206,127 @@ export default async function NewsAndNotices({ section = "all" }) {
   return (
     <>
       {/* ================= NEWS & NOTICES ================= */}
-      {showNews && <section className={styles.wrapper}>
-        <div className={styles.grid}>
-          {/* ---------- NEWS & EVENTS ---------- */}
-          <div className={styles.column}>
-            <div className={styles.head}>
-              <div className={styles.headTitle}>
-                <span className={styles.kicker}>Latest</span>
-                <h2>News And Event</h2>
+      {showNews && (
+        <section className={styles.wrapper}>
+          <div className={styles.grid}>
+            {/* ---------- NEWS & EVENTS ---------- */}
+            <div className={styles.column}>
+              <div className={styles.head}>
+                <div className={styles.headTitle}>
+                  <span className={styles.kicker}>Latest</span>
+                  <h2>News And Event</h2>
+                </div>
+                <span className={styles.headLine} />
+                <Link href="/news" className={styles.allLink}>
+                  <Arrow /> All News
+                </Link>
               </div>
-              <span className={styles.headLine} />
-              <Link href="/news" className={styles.allLink}>
-                <Arrow /> All News
-              </Link>
+
+              <div className={styles.newsList}>
+                {news.length ? (
+                  news.map((item, i) => {
+                    const { day, month, year } = getDateParts(item);
+                    return (
+                      <Link key={getId(item, i)} href={`/news/${getId(item, i)}`} className={styles.newsCard}>
+                        <div className={styles.newsDate}>
+                          <b>{day}</b>
+                          <small>{month.toUpperCase()}, {year}</small>
+                          <i className={styles.dateBar} />
+                        </div>
+                        <div className={styles.newsBody}>
+                          <h3>{getTitle(item)}</h3>
+                          <span className={styles.readMore}>
+                            <Arrow /> Read More
+                          </span>
+                        </div>
+                        <Lotus className={styles.lotus} />
+                      </Link>
+                    );
+                  })
+                ) : (
+                  <div className={styles.emptyState}>No news available right now.</div>
+                )}
+              </div>
             </div>
 
-            <div className={styles.newsList}>
-              {news.length ? (
-                news.map((item, i) => {
-                  const { day, month, year } = getDateParts(item);
-                  return (
-                    <Link key={getId(item, i)} href={`/news/${getId(item, i)}`} className={styles.newsCard}>
-                      <div className={styles.newsDate}>
-                        <b>{day}</b>
-                        <small>{month.toUpperCase()}, {year}</small>
-                        <i className={styles.dateBar} />
-                      </div>
-                      <div className={styles.newsBody}>
-                        <h3>{getTitle(item)}</h3>
-                        <span className={styles.readMore}>
-                          <Arrow /> Read More
-                        </span>
-                      </div>
-                      <Lotus className={styles.lotus} />
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className={styles.emptyState}>No news available right now.</div>
-              )}
+            {/* ---------- NOTICES ---------- */}
+            <div className={styles.column}>
+              <div className={styles.head}>
+                <div className={styles.headTitle}>
+                  <span className={styles.kicker}>Latest</span>
+                  <h2>Notices</h2>
+                </div>
+                <span className={styles.headLine} />
+                <Link href="/notices" className={styles.allLink}>
+                  <Arrow /> All Notices
+                </Link>
+              </div>
+
+              <div className={styles.tabs}>
+                <input type="radio" name="notice-tab" id="notice-tab-general" className={styles.inputGeneral} defaultChecked />
+                <input type="radio" name="notice-tab" id="notice-tab-exam" className={styles.inputExam} />
+
+                <div className={styles.tabList}>
+                  <label htmlFor="notice-tab-general" className={`${styles.tab} ${styles.tabGeneral}`}>General</label>
+                  <label htmlFor="notice-tab-exam" className={`${styles.tab} ${styles.tabExam}`}>Examination</label>
+                </div>
+
+                <div className={styles.panels}>
+                  <ul className={`${styles.noticeList} ${styles.panelGeneral}`}>
+                    {renderNotices(generalNotices, "No general notices right now.")}
+                  </ul>
+                  <ul className={`${styles.noticeList} ${styles.panelExam}`}>
+                    {renderNotices(examNotices, "No examination notices right now.")}
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
+        </section>
+      )}
 
-          {/* ---------- NOTICES ---------- */}
-          <div className={styles.column}>
-            <div className={styles.head}>
-              <div className={styles.headTitle}>
-                <span className={styles.kicker}>Latest</span>
-                <h2>Notices</h2>
-              </div>
-              <span className={styles.headLine} />
-              <Link href="/notices" className={styles.allLink}>
-                <Arrow /> All Notices
-              </Link>
-            </div>
-
-            <div className={styles.tabs}>
-              <input type="radio" name="notice-tab" id="notice-tab-general" className={styles.inputGeneral} defaultChecked />
-              <input type="radio" name="notice-tab" id="notice-tab-exam" className={styles.inputExam} />
-
-              <div className={styles.tabList}>
-                <label htmlFor="notice-tab-general" className={`${styles.tab} ${styles.tabGeneral}`}>General</label>
-                <label htmlFor="notice-tab-exam" className={`${styles.tab} ${styles.tabExam}`}>Examination</label>
-              </div>
-
-              <div className={styles.panels}>
-                <ul className={`${styles.noticeList} ${styles.panelGeneral}`}>
-                  {renderNotices(generalNotices, "No general notices right now.")}
-                </ul>
-                <ul className={`${styles.noticeList} ${styles.panelExam}`}>
-                  {renderNotices(examNotices, "No examination notices right now.")}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      }
       {/* ================= CONTACT ================= */}
       {showContact && <ContactSection info={info} />}
 
-      {/* ================= FAQ ================= */}
-      {showContact && <section className={styles.faqSection}>
-        <div className={styles.faqInner}>
-          <div className={styles.faqIntro}>
-            <span className={styles.faqKicker}>Help Centre</span>
-            <h2 className={styles.faqHeading}>
-              Frequently Asked <em>Questions</em>
-            </h2>
-            <p className={styles.faqText}>
-              Quick answers to the things students and parents ask us most. Can&apos;t find what you need? Reach out to the office directly.
-            </p>
-            <div className={styles.faqActions}>
-              <Link href="/contact" className={styles.faqBtnPrimary}>
-                Contact Office <Arrow />
-              </Link>
-              <Link href="/faq" className={styles.faqBtnGhost}>
-                View All FAQs
-              </Link>
+      {/* ================= FAQ (dynamic) ================= */}
+      {showContact && faqs.length > 0 && (
+        <section className={styles.faqSection}>
+          <div className={styles.faqInner}>
+            <div className={styles.faqIntro}>
+              <span className={styles.faqKicker}>Help Centre</span>
+              <h2 className={styles.faqHeading}>
+                Frequently Asked <em>Questions</em>
+              </h2>
+              <p className={styles.faqText}>
+                Quick answers to the things students and parents ask us most. Can&apos;t find what you need? Reach out to the office directly.
+              </p>
+              <div className={styles.faqActions}>
+                <Link href="/contact" className={styles.faqBtnPrimary}>
+                  Contact Office <Arrow />
+                </Link>
+                <Link href="/faq" className={styles.faqBtnGhost}>
+                  View All FAQs
+                </Link>
+              </div>
+            </div>
+
+            <div className={styles.faqList}>
+              {faqs.map((item, i) => (
+                <details key={getId(item, i)} name="faq" className={styles.faqItem} open={i === 0}>
+                  <summary className={styles.faqQuestion}>
+                    <span className={styles.faqNum}>{pad(i + 1)}</span>
+                    <span className={styles.faqQText}>{getQuestion(item)}</span>
+                    <span className={styles.faqIcon} aria-hidden="true" />
+                  </summary>
+                  <div className={styles.faqAnswer}>
+                    <p>{getAnswer(item)}</p>
+                  </div>
+                </details>
+              ))}
             </div>
           </div>
-
-          <div className={styles.faqList}>
-            {faqs.map((item, i) => (
-              <details key={getId(item, i)} name="faq" className={styles.faqItem} open={i === 0}>
-                <summary className={styles.faqQuestion}>
-                  <span className={styles.faqNum}>{pad(i + 1)}</span>
-                  <span className={styles.faqQText}>{item.question || item.title}</span>
-                  <span className={styles.faqIcon} aria-hidden="true" />
-                </summary>
-                <div className={styles.faqAnswer}>
-                  <p>{item.answer || item.description}</p>
-                </div>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>}
+        </section>
+      )}
     </>
   );
 }

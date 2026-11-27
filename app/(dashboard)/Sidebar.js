@@ -88,9 +88,9 @@ function Sidebar() {
               text="Office Details"
             />
             <NavItem
-              href="/dashboard/video_banner"
+              href="/dashboard/banner"
               icon={FaDiceD6}
-              text="Video Banner"
+              text="Banner"
             />
 
             {menu?.includes("about") && (

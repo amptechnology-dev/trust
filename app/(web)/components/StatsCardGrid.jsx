@@ -273,17 +273,34 @@ const fallbackItems = [
   { text: "Home", note: "Go back to the main page of the portal.", href: "/" },
 ];
 
-const StatsCardGrid = ({ metrics = [] }) => {
+// images = gallery API theke asha chhobir list (StatsCard theke prop hishebe ashe)
+const StatsCardGrid = ({ metrics = [], images = [] }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.2 });
   const [lightbox, setLightbox] = useState(null);
   const [active, setActive] = useState(0); // last hovered card stays open
   const hasData = metrics.length > 0;
   const items = hasData ? metrics : fallbackItems;
 
+  // Valid chhobi gulo alada kore nao
+  const galleryImages = useMemo(
+    () =>
+      (Array.isArray(images) ? images : []).filter(
+        (s) => typeof s === "string" && s.trim(),
+      ),
+    [images],
+  );
+
+  // Priority: card er nijer image > gallery chhobi > purono static fallback
+  const getImage = (item, index) =>
+    item?.image ||
+    (galleryImages.length
+      ? galleryImages[index % galleryImages.length]
+      : `/IMG${(index % 9) + 1}.jpg`);
+
   return (
     <div ref={ref} className="vu-stories__row">
       {items.map((item, index) => {
-        const imageSrc = `/IMG${(index % 9) + 1}.jpg`;
+        const imageSrc = getImage(item, index);
         const title = item?.text || "Public metric";
         const open = () =>
           setLightbox({ src: imageSrc, alt: title, caption: title });
@@ -299,7 +316,7 @@ const StatsCardGrid = ({ metrics = [] }) => {
             aria-label={`View image: ${title}`}
             style={{
               "--i": index,
-              backgroundImage: `url(${imageSrc})`,
+              backgroundImage: `url("${imageSrc}")`,
               cursor: "zoom-in",
             }}
             onClick={open}

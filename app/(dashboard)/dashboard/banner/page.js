@@ -1,19 +1,31 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Image from "next/image";
 import swal from "sweetalert";
+
+const API = process.env.NEXT_PUBLIC_BACKLINK;
+
+const getBannerSrc = (src = "") => {
+  if (/^https?:\/\//i.test(src)) return src;
+  return `${process.env.NEXT_PUBLIC_BACKPUBLIC}/${src.replace(/^\/+/, "").replace(/^public\//, "")}`;
+};
 
 function Page() {
   const [banner, setBanner] = useState([]);
+  const [bannerText, setBannerText] = useState([]);
   const [bannerError, setBannerError] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [text, setText] = useState("");
+  const [fileKey, setFileKey] = useState(0);
+
   const fetchBanner = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKLINK}/dashboard/office/list`,
-        { withCredentials: true }
-      );
-      setBanner(response.data?.data?.banner);
+      const response = await axios.get(`${API}/dashboard/office/list`, {
+        withCredentials: true,
+      });
+      setBanner(response.data?.data?.banner || []);
+      setBannerText(response.data?.data?.banner_text || []);
     } catch (error) {
       setBannerError(error.message);
     }
@@ -23,52 +35,55 @@ function Page() {
     fetchBanner();
   }, []);
 
-  const [formData, setFormData] = useState({
-    banner: null,
-  });
-
   const handleChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 1024 * 1024) {
-        setBannerError("File size exceeds 1MB limit.");
-        setFormData({ ...formData, banner: null });
-      } else {
-        setBannerError(null);
-        setFormData({ ...formData, banner: file });
-      }
+    const f = event.target.files?.[0];
+    if (!f) return;
+    if (f.size > 1024 * 1024) {
+      setBannerError("File size exceeds 1MB limit.");
+      setFile(null);
+      event.target.value = "";
+    } else {
+      setBannerError(null);
+      setFile(f);
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (formData.banner) {
-      const formDataUpload = new FormData();
-      formDataUpload.append("banner", formData.banner);
+    if (!file) {
+      setBannerError("Please select an image.");
+      return;
+    }
 
-      try {
-        const res = await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKLINK}/dashboard/banner/insert`,
-          formDataUpload,
-          {
-            withCredentials: true,
-          }
-        );
+    const fd = new FormData();
+    fd.append("banner", file);
+    fd.append("text", text); // file er age/pore jekono jaygay hole multer parse kore
 
-        if (res.status === 201) {
-          setFormData({ ...formData, banner: null });
-          swal("Success!", "Banner added successfully", "success");
-          fetchBanner();
-        } else {
-          setBannerError(res.error);
-        }
-      } catch (error) {
-        setBannerError(error);
+    try {
+      setUploading(true);
+      const res = await axios.post(`${API}/dashboard/banner/insert`, fd, {
+        withCredentials: true,
+      });
+      if (res.status === 201) {
+        setFile(null);
+        setText("");
+        setFileKey((k) => k + 1);
+        setBannerError(null);
+        swal("Success!", "Banner added successfully", "success");
+        fetchBanner();
       }
+    } catch (error) {
+      setBannerError(
+        error?.response?.data?.errors ||
+          error?.response?.data?.message ||
+          error.message
+      );
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (index) => {
     swal({
       title: "Are you sure?",
       text: "Once deleted, you will not be able to recover this item!",
@@ -76,21 +91,16 @@ function Page() {
       buttons: true,
       dangerMode: true,
     }).then(async (willDelete) => {
-      if (willDelete) {
-        try {
-          await axios.delete(
-            `${process.env.NEXT_PUBLIC_BACKLINK}/dashboard/banner/delete/${id}`,
-            { withCredentials: true }
-          );
-          fetchBanner();
-          swal("Deleted Successfully!", {
-            icon: "success",
-            timer: 1000,
-          });
-        } catch (error) {
-          console.error("Error deleting gallery item:", error);
-          alert("Error deleting gallery item");
-        }
+      if (!willDelete) return;
+      try {
+        await axios.delete(`${API}/dashboard/banner/delete/${index}`, {
+          withCredentials: true,
+        });
+        fetchBanner();
+        swal("Deleted Successfully!", { icon: "success", timer: 1000 });
+      } catch (error) {
+        console.error("Error deleting banner:", error);
+        swal("Error!", "Could not delete banner.", "error");
       }
     });
   };
@@ -100,30 +110,44 @@ function Page() {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>
-            Banner{" "}
+            Banner Image{" "}
             <span className="font-italic text-sm font-weight-light">
               (max size: 1MB, 600px X 400px)
             </span>
           </label>
           <input
+            key={fileKey}
             type="file"
             accept="image/*"
             className="form-control"
             name="banner"
             onChange={handleChange}
           />
-          {bannerError && <div className="text-danger">{bannerError}</div>}
-          {/* {formData.banner && (
-            <Image
-              src={formData.banner}
-              alt="Banner"
-              width={300}
-              height={200}
-            />
-          )} */}
         </div>
-        <button type="submit" className="btn btn-primary">
-          Add
+
+        <div className="form-group">
+          <label>
+            Banner Text{" "}
+            <span className="font-italic text-sm font-weight-light">
+              (optional, max 120 characters)
+            </span>
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            value={text}
+            maxLength={120}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="e.g. Welcome to our village"
+          />
+        </div>
+
+        {bannerError && (
+          <div className="text-danger mb-2">{String(bannerError)}</div>
+        )}
+
+        <button type="submit" className="btn btn-primary" disabled={uploading}>
+          {uploading ? "Uploading..." : "Add"}
         </button>
       </form>
 
@@ -132,22 +156,34 @@ function Page() {
           <thead>
             <tr>
               <th scope="col">Banner</th>
+              <th scope="col">Text</th>
               <th scope="col">Manage</th>
             </tr>
           </thead>
           <tbody>
-            {banner?.map((banner, index) => (
-              <tr key={index}>
+            {banner.length === 0 && (
+              <tr>
+                <td colSpan={3} className="text-muted">
+                  No banners added yet.
+                </td>
+              </tr>
+            )}
+            {banner.map((src, index) => (
+              <tr key={`${src}-${index}`}>
                 <td>
-                  <Image
-                    src={`${process.env.NEXT_PUBLIC_BACKPUBLIC}/${banner.slice(
-                      7
-                    )}`}
-                    alt={`Banner ${index}`}
-                    width={400}
-                    height={250}
+                  <img
+                    src={getBannerSrc(src)}
+                    alt={`Banner ${index + 1}`}
+                    style={{
+                      width: 400,
+                      maxWidth: "100%",
+                      height: 250,
+                      objectFit: "cover",
+                      borderRadius: 6,
+                    }}
                   />
                 </td>
+                <td>{bannerText[index] || <span className="text-muted">—</span>}</td>
                 <td>
                   <button
                     className="btn btn-danger"

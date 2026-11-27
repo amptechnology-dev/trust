@@ -12,9 +12,9 @@ import ServiceGrid from "./service/page";
 import Tender from "./Tender/page";
 import Ads from "./Ads/page";
 import StatsCard from "./StatsCard/page";
-import Founder from "./Founder/page";
+import Founder from "./founder/page";
 import Notice from "./notices/page";
-import Impact from "./impact/page"
+import Impact from "./impact/page";
 import WhatWeDo from "./WhatWeDo/page";
 import StoryVideo from "./StoryVideo/page";
 
@@ -68,15 +68,12 @@ export default async function Home() {
       <Impact />
       <StatsCard afterStats={<WhatWeDo />} />
       <StoryVideo />
-      <About showFullDescription={false} />
-      <GallerySmall />
       <ChairmanDesk section="contact" />
       <Notifications />
       <Ads />
       <ServiceGrid />
       <Team />
       <VideoGallery />
-      <Project imagedata={backimages?.data} />
       <Uselinks data={usefulinks?.data} />
     </main>
   );
