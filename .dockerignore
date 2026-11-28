@@ -1,0 +1,13 @@
+node_modules
+.next
+.next-dev
+.git
+.gitignore
+README.md
+Dockerfile
+dockerfile
+docker-compose.yaml
+docker-compose.yml
+init-ssl.sh
+.env.local
+.env*.local

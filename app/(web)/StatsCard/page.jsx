@@ -318,11 +318,15 @@ export default async function StatsCard({ afterStats = null }) {
         <StatsCardGrid metrics={metrics} images={galleryImages} />
 
         <div className="vu-stories__actions">
-          <a href="/service" className="vu-stories__btn vu-stories__btn--solid">
+          {/* Header er Services / Contact er sathe same section id */}
+          <a
+            href="/#services"
+            className="vu-stories__btn vu-stories__btn--solid"
+          >
             Our Services
           </a>
           <a
-            href="/contact"
+            href="/#contact"
             className="vu-stories__btn vu-stories__btn--outline"
           >
             Contact Us
@@ -385,9 +389,9 @@ export default async function StatsCard({ afterStats = null }) {
                   </div>
                 ))}
               </div>
-              <a href="/About" className="vu-about__btn">
+              {/* <a href="/About" className="vu-about__btn">
                 Read our full story
-              </a>
+              </a> */}
             </div>
           </div>
 

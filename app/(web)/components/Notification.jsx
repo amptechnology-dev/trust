@@ -8,7 +8,11 @@ const TenderNotifications = ({ data, bgImgae = "", count = [] }) => {
   const normalizeValue = (value) => {
     if (typeof value !== "string") return "";
     const trimmed = value.trim();
-    if (!trimmed || trimmed.toLowerCase() === "null" || trimmed.toLowerCase() === "undefined") {
+    if (
+      !trimmed ||
+      trimmed.toLowerCase() === "null" ||
+      trimmed.toLowerCase() === "undefined"
+    ) {
       return "";
     }
     return trimmed;
@@ -16,7 +20,10 @@ const TenderNotifications = ({ data, bgImgae = "", count = [] }) => {
 
   const buildPublicUrl = (value) => {
     const cleaned = normalizeValue(value).replace(/^public\//, "");
-    const base = normalizeValue(process.env.NEXT_PUBLIC_BACKPUBLIC).replace(/\/$/, "");
+    const base = normalizeValue(process.env.NEXT_PUBLIC_BACKPUBLIC).replace(
+      /\/$/,
+      "",
+    );
 
     if (!cleaned) return "";
     if (/^https?:\/\//i.test(cleaned)) return cleaned;
@@ -62,19 +69,27 @@ const TenderNotifications = ({ data, bgImgae = "", count = [] }) => {
       className="tender-notifications"
       ref={ref}
       style={{
-        backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : "none",
+        backgroundImage: backgroundImageUrl
+          ? `url(${backgroundImageUrl})`
+          : "none",
       }}
     >
       {/* Left Section */}
       <div className="left-section">
         <div className="tabs">
           {hasTender && (
-            <button className={activeTab === "tender" ? "active" : ""} onClick={() => setActiveTab("tender")}>
+            <button
+              className={activeTab === "tender" ? "active" : ""}
+              onClick={() => setActiveTab("tender")}
+            >
               TENDER
             </button>
           )}
           {hasNotice && (
-            <button className={activeTab === "notice" ? "active" : ""} onClick={() => setActiveTab("notice")}>
+            <button
+              className={activeTab === "notice" ? "active" : ""}
+              onClick={() => setActiveTab("notice")}
+            >
               NOTICE
             </button>
           )}
@@ -96,7 +111,12 @@ const TenderNotifications = ({ data, bgImgae = "", count = [] }) => {
                     {/* <span className="new-blink">New*</span> */}
                     <img src="/new.gif" alt="New" className="new-blink" />
                   </p>
-                  <a href={buildPublicUrl(item.link) || "#"} className="notice-link" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={buildPublicUrl(item.link) || "#"}
+                    className="notice-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View
                   </a>
                 </div>
@@ -114,7 +134,11 @@ const TenderNotifications = ({ data, bgImgae = "", count = [] }) => {
             <div className="stat-row" key={index}>
               <p>{stat.text}</p>
               <h2>
-                <CountUp end={Number(stat.value) || 0} duration={2} start={inView ? null : 0} />
+                <CountUp
+                  end={Number(stat.value) || 0}
+                  duration={2}
+                  start={inView ? null : 0}
+                />
               </h2>
             </div>
           ))}
@@ -124,12 +148,6 @@ const TenderNotifications = ({ data, bgImgae = "", count = [] }) => {
           <div className="archives">
             <h3>FAQ</h3>
             <a href="/faq">
-              <button>CLICK HERE</button>
-            </a>
-          </div>
-          <div className="citizen-forum">
-            <h3>Grievance</h3>
-            <a href="/grievance">
               <button>CLICK HERE</button>
             </a>
           </div>

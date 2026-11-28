@@ -87,11 +87,7 @@ function Sidebar() {
               icon={FaHouseUser}
               text="Office Details"
             />
-            <NavItem
-              href="/dashboard/banner"
-              icon={FaDiceD6}
-              text="Banner"
-            />
+            <NavItem href="/dashboard/banner" icon={FaDiceD6} text="Banner" />
 
             {menu?.includes("about") && (
               <NavItem
@@ -121,50 +117,11 @@ function Sidebar() {
               />
             )}
 
-            {menu?.includes("ads") && (
-              <NavItem
-                href="/dashboard/adverstisement"
-                icon={FaAdversal}
-                text="Advertisements"
-              />
-            )}
-
-            {menu?.includes("staff") && (
-              <>
-                <NavItem
-                  href="/dashboard/addcategoryform"
-                  icon={FaDochub}
-                  text="Designations"
-                />
-                <NavItem
-                  href="/dashboard/staffadd"
-                  icon={FaBaby}
-                  text="Staff"
-                />
-              </>
-            )}
-
-            {menu?.includes("people") && (
-              <NavItem
-                href="/dashboard/members"
-                icon={FaRegUser}
-                text="Members Desk"
-              />
-            )}
-
             {menu?.includes("gallery") && (
               <NavItem
                 href="/dashboard/galleryform"
                 icon={FaClone}
                 text="Gallery"
-              />
-            )}
-
-            {menu?.includes("video-gallery") && (
-              <NavItem
-                href="/dashboard/video_gallery"
-                icon={FaPhotoVideo}
-                text="Video Gallery"
               />
             )}
 
@@ -205,23 +162,10 @@ function Sidebar() {
                 text="Faq"
               />
             )}
-            {menu?.includes("grievance") && (
-              <NavItem
-                href="/dashboard/grievance"
-                icon={FaEnvelopeOpenText}
-                text="Grievance"
-              />
-            )}
-
             <NavItem
               href="/dashboard/sociallink"
               icon={FaInstalod}
               text="Social Link"
-            />
-            <NavItem
-              href="/dashboard/useful-links"
-              icon={FaBookmark}
-              text="Useful Links"
             />
             <li className="nav-item d-none">
               <Link href="/dashboard/usermasterpage" className="nav-link">

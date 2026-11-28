@@ -57,24 +57,23 @@ async function getData() {
 
 export default async function Home() {
   const usefulinks = await getData();
-  const backimages = await getData();
 
   return (
     <main className={styles.main}>
-      <Hero />
+      <div id="home"><Hero /></div>
       <Tender />
-      <Founder />
-      <Notice />
-      <Impact />
-      <StatsCard afterStats={<WhatWeDo />} />
+      <div id="founder"><Founder /></div>
+      <div id="notices"><Notice /></div>
+      <div id="impact"><Impact /></div>
+      <div id="what-we-do"><StatsCard afterStats={<WhatWeDo />} /></div>
       <StoryVideo />
-      <ChairmanDesk section="contact" />
+      <div id="contact"><ChairmanDesk section="contact" /></div>
       <Notifications />
       <Ads />
-      <ServiceGrid />
-      <Team />
-      <VideoGallery />
-      <Uselinks data={usefulinks?.data} />
+      <div id="services"><ServiceGrid /></div>
+      <div id="team"><Team /></div>
+      <div id="videos"><VideoGallery /></div>
+      <div id="links"><Uselinks data={usefulinks?.data} /></div>
     </main>
   );
 }

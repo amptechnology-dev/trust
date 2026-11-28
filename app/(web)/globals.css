@@ -4215,3 +4215,11 @@
     animation: none !important;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+main > div[id] {
+  scroll-margin-top: 110px; /* header height-er moto adjust koro */
+}

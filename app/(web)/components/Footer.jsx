@@ -177,7 +177,7 @@ export default function Footer({ data = {}, links = {}, bg = "" }) {
             &copy; Copyright <strong>{name}</strong>. All Rights Reserved
           </div>
           <div className="credits">
-            Designed by{" "}
+            Designed and Developed by{" "}
             <a href="https://amptechnology.in" target="_blank" rel="noreferrer noopener">
               AmpTechnology
             </a>

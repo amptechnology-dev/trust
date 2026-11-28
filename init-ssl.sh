@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e
 
-DOMAIN="bhagawanpurgp.com"
+DOMAIN="trust.amptechnology.in"
 EMAIL="devs.amptechnology@gmail.com"
-APP_CONTAINER="bhagabanpur"
+APP_CONTAINER="trust-app"
 APP_PORT="3021"
 
 # Reuse nginx + certbot from the backend project

@@ -323,9 +323,6 @@ export default async function StoryVideoSection() {
             >
               Watch More Videos
             </a>
-            <a href="/contact" className="vu-video__btn vu-video__btn--outline">
-              Get In Touch
-            </a>
           </div>
         </div>
       </div>

@@ -228,12 +228,16 @@ const AnimatedMetric = ({ value, active }) => {
   );
 };
 
-// shown when the office has not published any counters yet
+/*
+  Fallback cards (office e kono counter na thakle).
+  Home page e jegulor section ache segulo "/#id" e scroll kore (Header er sathe same id).
+  Je page er section nei (About, Grievance, Citizen) segulo age er moto page link.
+*/
 const fallbackItems = [
   {
     text: "Our Services",
     note: "Browse the services offered by the TRUST WEBSITE.",
-    href: "/service",
+    href: "/#services",
   },
   {
     text: "About Us",
@@ -243,7 +247,7 @@ const fallbackItems = [
   {
     text: "Our Team",
     note: "Meet the people serving the community.",
-    href: "/Team",
+    href: "/#team",
   },
   {
     text: "Grievance Cell",
@@ -258,7 +262,7 @@ const fallbackItems = [
   {
     text: "Contact Office",
     note: "Reach the office for help and information.",
-    href: "/contact",
+    href: "/#contact",
   },
   {
     text: "Photo Gallery",
@@ -268,9 +272,9 @@ const fallbackItems = [
   {
     text: "Video Gallery",
     note: "Watch videos from programs and public events.",
-    href: "/video-gallery",
+    href: "/#videos",
   },
-  { text: "Home", note: "Go back to the main page of the portal.", href: "/" },
+  { text: "Home", note: "Go back to the main page of the portal.", href: "/#home" },
 ];
 
 // images = gallery API theke asha chhobir list (StatsCard theke prop hishebe ashe)

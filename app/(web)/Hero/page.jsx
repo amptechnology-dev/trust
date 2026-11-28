@@ -160,15 +160,16 @@ export default async function videosPage() {
                   ))}
                 </h1>
 
+                {/* Header er Services / Contact section er sathe same id */}
                 <div className="gp-hero__actions">
                   <a
-                    href="/service"
+                    href="/#services"
                     className="gp-hero__btn gp-hero__btn--solid"
                   >
                     Our Services
                   </a>
                   <a
-                    href="/grievance"
+                    href="/#contact"
                     className="gp-hero__btn gp-hero__btn--outline"
                   >
                     Contact Us
